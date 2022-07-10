@@ -1,0 +1,8 @@
+[submodule "submodules/glfw"]
+	path = submodules/glfw
+	url = https://github.com/glfw/glfw.git
+	branch = master
+[submodule "submodules/JimmyNeuron"]
+	path = submodules/JimmyNeuron
+	url = git@github.com:SebastianK1999/JimmyNeuron.git
+	branch = master
