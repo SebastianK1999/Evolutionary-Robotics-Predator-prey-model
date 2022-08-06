@@ -1,8 +1,12 @@
-[submodule "submodules/glfw"]
-	path = submodules/glfw
-	url = https://github.com/glfw/glfw.git
-	branch = master
 [submodule "submodules/JimmyNeuron"]
 	path = submodules/JimmyNeuron
 	url = git@github.com:SebastianK1999/JimmyNeuron.git
+	branch = master
+[submodule "submodules/oglUtils"]
+	path = submodules/oglUtils
+	url = git@github.com:SebastianK1999/OpenGL-Utilities.git
+	branch = main
+[submodule "submodules/whereami"]
+	path = submodules/whereami
+	url = https://github.com/gpakosz/whereami.git
 	branch = master
