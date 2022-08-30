@@ -1,0 +1,7 @@
+fix poligons    ctrl + t
+
+normals fixed   properties.notrmals.autosmooth
+*               mofifiers.WeightedNormals
+ 
+forward axis    y
+up axis         z

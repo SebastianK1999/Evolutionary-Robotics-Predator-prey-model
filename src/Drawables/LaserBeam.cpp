@@ -1,25 +1,65 @@
-#include "Drawables/Floor.hpp"
+#include "Drawables/LaserBeam.hpp"
+
+#include <utility>
 
 //first and las column are swapped, now culling shows only inside of cube;
-const GLfloat erppm::Floor::vertexBufferData[] = { 
-    -1.0f,-1.0f, 0.0f,
-     1.0f,-1.0f, 0.0f,
-     1.0f, 1.0f, 0.0f,
-    -1.0f,-1.0f, 0.0f,
-     1.0f, 1.0f, 0.0f,
-    -1.0f, 1.0f, 0.0f,
+const GLfloat erppm::LaserBeam::vertexBufferData[] = { 
+     0.00f,  0.03f,  0.00f,
+     0.00f, -0.03f,  0.00f,
+     1.00f,  0.03f,  0.00f,
+     0.00f, -0.03f,  0.00f,
+     1.00f,  0.03f,  0.00f,
+     1.00f, -0.03f,  0.00f,
+     
+     0.00f,  0.03f,  0.00f,
+     1.00f,  0.03f,  0.00f,
+     0.00f, -0.03f,  0.00f,
+     0.00f, -0.03f,  0.00f,
+     1.00f, -0.03f,  0.00f,
+     1.00f,  0.03f,  0.00f,
+     
+     0.00f,  0.00f,  0.03f,
+     0.00f,  0.00f, -0.03f,
+     1.00f,  0.00f,  0.03f,
+     0.00f,  0.00f, -0.03f,
+     1.00f,  0.00f,  0.03f,
+     1.00f,  0.00f, -0.03f,
+     
+     0.00f,  0.00f,  0.03f,
+     1.00f,  0.00f,  0.03f,
+     0.00f,  0.00f, -0.03f,
+     0.00f,  0.00f, -0.03f,
+     1.00f,  0.00f, -0.03f,
+     1.00f,  0.00f,  0.03f,
 };
 
-erppm::Floor::Floor()
-: oglu::Drawable()
-, primaryColor()
+erppm::LaserBeam::LaserBeam(const LaserBeam& other)
+: oglu::Drawable(other)
+, oglu::DrawableBase(other)
+, primaryColor(other.primaryColor)
 {
-    //GLfloat cross_color[3] = { 0.0, 1.0, 0.0 };
     setShaders();
     setBuffers();
 }
 
-void erppm::Floor::setShaders() {
+erppm::LaserBeam::LaserBeam(LaserBeam&& other)
+: oglu::Drawable(std::move(other))
+, oglu::DrawableBase(std::move(other))
+, primaryColor(std::move(other.primaryColor))
+{
+    setShaders();
+    setBuffers();
+}
+
+erppm::LaserBeam::LaserBeam()
+: oglu::Drawable()
+, primaryColor()
+{
+    setShaders();
+    setBuffers();
+}
+
+void erppm::LaserBeam::setShaders() {
     compileShaders(R"END(
 
         #version 330 core
@@ -31,50 +71,42 @@ void erppm::Floor::setShaders() {
         layout(location = 0) uniform mat4 MVP;
         layout(location = 1) uniform vec4 position;
         layout(location = 2) uniform vec4 scale;
-        layout(location = 3) uniform vec3 light;
+        layout(location = 3) uniform vec4 rotation;
         layout(location = 4) uniform vec3 vCol;
 
 
         out vec3 fragmentColor;
         out vec3 fPos;
         out vec3 fCol;
-        out vec3 fLight;
 
         void main(){	
-            vec4 verPos = position + vec4(vertexPosition,0)*scale;
-
+            vec4 verPos = vec4(vertexPosition,0)*scale;
+            float x = verPos.x;
+            float y = verPos.y;
+            verPos.x = x * cos(rotation.z) - y * sin(rotation.z);
+            verPos.y = x * sin(rotation.z) + y * cos(rotation.z);
+            //verPos.z = ;
+            verPos = (verPos + position);
             gl_Position =  MVP * verPos;
             fPos = verPos.xyz;
             fCol = vCol;
-            fLight = light;
         }
     )END", R"END(
 
         #version 330 core
         in vec3 fPos;
         in vec3 fCol;
-        in vec3 fLight;
 
         out vec4 color;
 
         void main(){
-            vec3 l = normalize(fLight - fPos.xyz);
-            vec3 n = vec3(0,0,1);
-            float shading = clamp(dot(n,l),0,1);
-            vec3 cDark = fCol * shading*0.3;
-            vec3 cLight = fCol * (shading * 0.3 + 0.7);
-            if(fPos[0] * fPos[1] < 0){
-                color = (mod(int(fPos[0]) + int(fPos[1]),2) == 0.0 ? vec4(cDark.r, cDark.g, cDark.b, 1.0) : vec4(cLight.r, cLight.g, cLight.b, 1.0));
-            }
-            else{
-                color = (mod(int(fPos[0]) + int(fPos[1]),2) == 0.0 ? vec4(cLight.r, cLight.g, cLight.b, 1.0) : vec4(cDark.r, cDark.g, cDark.b, 1.0));
-            }
+            color = vec4(fCol,1);
         }
 
     )END");
 }
 
-void erppm::Floor::setBuffers() {
+void erppm::LaserBeam::setBuffers() {
     bindBuffers();
 
     GLuint vertexBuffer;    
@@ -94,14 +126,14 @@ void erppm::Floor::setBuffers() {
     );
 }
 
-void erppm::Floor::draw(const glm::mat4& MVP, const glm::vec3& light) const {
+void erppm::LaserBeam::draw(const glm::mat4& MVP, const glm::vec3 color) const {
     bindProgram();
     bindBuffers();
     glUniformMatrix4fv(0, 1, GL_FALSE, &MVP[0][0]);
     glUniform4f(1, position[0],position[1],position[2],1);
     glUniform4f(2, scale[0],scale[1],scale[2],1);
-    glUniform3f(3, light.x, light.y, light.z);
-    glUniform3f(4, primaryColor.x, primaryColor.y, primaryColor.z);
+    glUniform4f(3, rotation[0],rotation[1],rotation[2],1);
+    glUniform3f(4, color.x, color.y, color.z);
     glDrawArrays(GL_TRIANGLES, 0, 12*3); // 12*3 indices starting at 0 -> 12 triangles
     
 }
