@@ -8,6 +8,7 @@
 
 #include "oglUtil_OLD/Mesh.hpp"
 #include "Robotics/SensorBase.hpp"
+#include "Robotics/ObjectTypes.hpp"
 #include "Drawables/Floor.hpp"
 #include "Drawables/Wall.hpp"
 
@@ -16,8 +17,10 @@ namespace erppm
     class RobotBase
     {
     public:
+        Mesh body;
         glm::dvec2 velocity;
         double angularVelocity;
+        EObjectType type;
         RobotBase(const std::string& modePlath);
         virtual ~RobotBase();
         void draw(const glm::mat4& MVP, const glm::vec3& light) const;
@@ -36,10 +39,10 @@ namespace erppm
         glm::vec3& getPrimaryColor();
         virtual const size_t getControlInputSize() const noexcept;
         const size_t getSensorDataSize() const noexcept;
-        
+        void reinitializeDrawables();
+        void clearVelocity();
 
     protected:
-        Mesh body;
         std::vector<double> sensorData;
         std::vector<SensorBase*> sensors;
     };

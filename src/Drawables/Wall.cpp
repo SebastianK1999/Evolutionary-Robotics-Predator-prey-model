@@ -243,3 +243,10 @@ void erppm::Wall::draw(const glm::mat4& MVP, const glm::vec3& light) const {
 
 void erppm::Wall::setColor(float r, float g, float b){
 }
+
+void erppm::Wall::reinitialize(){
+	glGenVertexArrays(1, &(vaoId));
+	bindProgram();
+	setShaders();
+	setBuffers();
+}

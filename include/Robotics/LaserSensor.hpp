@@ -18,5 +18,6 @@ namespace erppm
         void measure(const std::vector<RobotBase*>& robots, const std::vector<Wall>& walls, const Floor& floor, std::vector<double>::iterator& measurementDataIterator) override;
         void draw(const glm::mat4& MVP, const glm::vec3& light) override;
         const size_t getMeasurementDataSize() const noexcept override;
+        void reinitializeDrawables() override;
     };   
 }

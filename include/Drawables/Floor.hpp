@@ -12,6 +12,7 @@ namespace erppm
         void setShaders();
         void setBuffers();
         void draw(const glm::mat4& MVP, const glm::vec3& light) const;
+        void reinitialize();
     private:
         static const GLfloat vertexBufferData[];
     };

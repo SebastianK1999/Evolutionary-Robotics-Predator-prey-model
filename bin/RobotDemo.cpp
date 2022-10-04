@@ -141,8 +141,8 @@ MainWindow::MainWindow(const int _width, const int _height, const std::string& _
         robots.back()->getPosition().x = 5;
         robots.back()->getPosition().y = i;
         // robots.back()->getPrimaryColor() = glm::vec3(0.2);
-        robots.back()->getPrimaryColor() = glm::vec3(Misc::rand::get().Decim(1.0f), Misc::rand::get().Decim(1.0f), Misc::rand::get().Decim(1.0f));
-        robots.back()->getRotation()[2] = Misc::rand::get().Decim(glm::two_pi<float>());
+        robots.back()->getPrimaryColor() = glm::vec3(Misc::rand::get().decim(1.0f), Misc::rand::get().decim(1.0f), Misc::rand::get().decim(1.0f));
+        robots.back()->getRotation()[2] = Misc::rand::get().decim(glm::two_pi<float>());
         robots.back()->addSensor(erppm::LaserSensor(glm::vec4(glm::cos(angle),glm::sin(angle),0.2,0), glm::vec4(0,0,angle,0)));
     }
     mainCamera.radius = 13;

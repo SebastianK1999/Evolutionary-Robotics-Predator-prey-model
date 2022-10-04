@@ -4,9 +4,10 @@
 #include <numeric>
 
 erppm::RobotBase::RobotBase(const std::string& modePlath)
-: velocity(0,0)
+: body(modePlath)
+, velocity(0,0)
 , angularVelocity(0)
-, body(modePlath)
+, type(EObjectTypeNone)
 , sensorData()
 , sensors()
 {}
@@ -150,4 +151,16 @@ const size_t erppm::RobotBase::getControlInputSize() const noexcept{
 
 const size_t erppm::RobotBase::getSensorDataSize() const noexcept{
     return std::accumulate(sensors.begin(), sensors.end(), 0, [](int i, const erppm::SensorBase* o){return i + o->getMeasurementDataSize();});
+}
+
+void erppm::RobotBase::reinitializeDrawables(){
+    body.reinitialize();
+    for(std::vector<erppm::SensorBase *>::iterator iter = sensors.begin(); iter != sensors.end(); iter = std::next(iter)){
+        (*iter)->reinitializeDrawables();
+    }
+}
+
+void erppm::RobotBase::clearVelocity(){
+    velocity = {0.0, 0.0};
+    angularVelocity = 0.0;
 }

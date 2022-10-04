@@ -20,6 +20,7 @@ namespace erppm{
         void setBuffers();
         void draw(const glm::mat4& MVP, const glm::vec3& light) const;
         void setColor(float r, float g, float b);
+        void reinitialize();
     private:
         static const GLfloat vertexBufferData[];
         static const GLfloat normalBufferData[];

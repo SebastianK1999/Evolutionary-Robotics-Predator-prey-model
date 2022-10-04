@@ -5,7 +5,10 @@
 add_subdirectory ("oglUtils")
 
 # JimmyNeuron
-#add_subdirectory("JimmyNeuron")
+if (NOT TARGET JimmyNeuron)
+    add_subdirectory("JimmyNeuron")
+endif()
+
 
 # whereami
 if (NOT TARGET whereami)

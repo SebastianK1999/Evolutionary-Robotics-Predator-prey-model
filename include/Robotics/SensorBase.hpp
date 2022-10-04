@@ -29,6 +29,7 @@ namespace erppm
         glm::vec4& getScale();
         glm::vec3& getPrimaryColor();
         virtual const size_t getMeasurementDataSize() const noexcept;
+        virtual void reinitializeDrawables() = 0;
 
     protected:
         Mesh body;

@@ -38,16 +38,19 @@ void erppm::LaserSensor::measure(const std::vector<RobotBase*>& robots, const st
                 meetingPoint.y = laser_a * meetingPoint.x + laser_b;
                 float distanceFromTargetRobot = glm::length(meetingPoint - *(glm::vec2*)&((*iter)->getPosition()));
                 if(distanceFromTargetRobot <= 1){
-                    if (direction.x >= 0 & meetingPoint.x >= this->body.position.x || direction.x < 0 & meetingPoint.x < this->body.position.x){
+                    if (((direction.x >= 0) && (meetingPoint.x >= this->body.position.x)) || ((direction.x < 0) && (meetingPoint.x < this->body.position.x))){
                         float tempDistance = glm::length(meetingPoint - *(glm::vec2*)&(this->body.position)) - glm::sqrt((distanceFromTargetRobot-1) * (-distanceFromTargetRobot - 1)); // sqrt(-(X-x0)*(X-x1))
-                        robotsDistance = (tempDistance < robotsDistance ? tempDistance : robotsDistance);
+                        if(tempDistance < robotsDistance){
+                            robotsDistance = tempDistance;
+                            robotType = (*iter)->type;
+                        }
                     }
                 }
             }
         }
     }
+    itObjectType = robotType;
     itDistance   = robotsDistance;
-    itObjectType = 28;
 
     float wallsDistance = INFINITY;
     for(std::vector<Wall>::const_iterator iter = walls.begin(); iter != walls.end(); iter = std::next(iter)){
@@ -187,4 +190,9 @@ void erppm::LaserSensor::draw(const glm::mat4& MVP, const glm::vec3& light) {
 
 const size_t erppm::LaserSensor::getMeasurementDataSize() const noexcept{
     return 2;
+}
+
+void erppm::LaserSensor::reinitializeDrawables(){
+    body.reinitialize();
+    laserBeam.reinitialize();
 }

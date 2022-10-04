@@ -105,3 +105,11 @@ void erppm::Floor::draw(const glm::mat4& MVP, const glm::vec3& light) const {
     glDrawArrays(GL_TRIANGLES, 0, 12*3); // 12*3 indices starting at 0 -> 12 triangles
     
 }
+
+void erppm::Floor::reinitialize(){
+	glGenVertexArrays(1, &(vaoId));
+	bindProgram();
+	setShaders();
+	setBuffers();
+}
+

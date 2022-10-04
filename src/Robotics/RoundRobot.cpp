@@ -1,6 +1,8 @@
-#include "Robotics/RoundRobot.hpp"
+#include <cassert>
 
 #include "glm/gtc/constants.hpp"
+
+#include "Robotics/RoundRobot.hpp"
 
 erppm::RoundRobot::RoundRobot()
 : RobotBase("../res/obj_models/round_robot")
@@ -9,6 +11,7 @@ erppm::RoundRobot::RoundRobot()
 erppm::RoundRobot::~RoundRobot(){}
 
 void erppm::RoundRobot::run(double time, const std::vector<double>& controlInput) {
+    assert(controlInput.size() == this->getControlInputSize());
     constexpr double maxRps                 = 5.0;
     constexpr double wheelRadius            = 0.1;
     constexpr double wheelPlacementRadius   = 0.9; 

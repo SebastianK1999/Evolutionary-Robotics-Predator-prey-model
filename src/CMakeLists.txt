@@ -10,7 +10,7 @@ if (NOT TARGET ERPPM_LIB)
         ${ERPPM_FILES_CPP}
     )
     target_include_directories(ERPPM_LIB PUBLIC "${CMAKE_CURRENT_LIST_DIR}/../include")
-    target_link_libraries(ERPPM_LIB PUBLIC ${CORE_LIBS} glm oglu libepoxy glfw GLEW whereami)
+    target_link_libraries(ERPPM_LIB PUBLIC ${CORE_LIBS} glm oglu JimmyNeuron libepoxy glfw GLEW whereami)
 endif()
 
 
