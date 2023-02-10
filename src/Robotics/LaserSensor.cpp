@@ -7,15 +7,19 @@
 
 #include "Robotics/ObjectTypes.hpp"
 
-erppm::LaserSensor::LaserSensor(const glm::vec4& _positionAtRobot, const glm::vec4& _rotationAtRobot)
+erppm::LaserSensor::LaserSensor(const glm::vec4& _positionAtRobot, const glm::vec4& _rotationAtRobot, const std::array<double, erppm::LaserSensor::SIZE_OF_EVOLUTIONARY_DATA>& _evolutionaryData)
 : SensorBase("../res/obj_models/laser_sensor", _positionAtRobot, _rotationAtRobot)
 , laserBeam()
-{}
+{
+    evolutionaryData = std::vector<double>(_evolutionaryData.data(), _evolutionaryData.data() + SIZE_OF_EVOLUTIONARY_DATA);
+}
 
 erppm::LaserSensor::LaserSensor(LaserSensor&& other)
 : SensorBase(std::move(other))
 , laserBeam(std::move(other.laserBeam))
-{}
+{
+    evolutionaryData.resize(2);
+}
 
 erppm::LaserSensor::~LaserSensor(){}
 
@@ -39,7 +43,7 @@ void erppm::LaserSensor::measure(const std::vector<RobotBase*>& robots, const st
                 float distanceFromTargetRobot = glm::length(meetingPoint - *(glm::vec2*)&((*iter)->getPosition()));
                 if(distanceFromTargetRobot <= 1){
                     if (((direction.x >= 0) && (meetingPoint.x >= this->body.position.x)) || ((direction.x < 0) && (meetingPoint.x < this->body.position.x))){
-                        float tempDistance = glm::length(meetingPoint - *(glm::vec2*)&(this->body.position)) - glm::sqrt((distanceFromTargetRobot-1) * (-distanceFromTargetRobot - 1)); // sqrt(-(X-x0)*(X-x1))
+                        float tempDistance = glm::length(meetingPoint - static_cast<glm::vec2>(this->body.position)) - glm::sqrt((distanceFromTargetRobot-1) * (-distanceFromTargetRobot - 1)); // sqrt(-(X-x0)*(X-x1))
                         if(tempDistance < robotsDistance){
                             robotsDistance = tempDistance;
                             robotType = (*iter)->type;

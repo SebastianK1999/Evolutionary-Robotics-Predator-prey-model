@@ -17,6 +17,7 @@ namespace erppm
         friend class RobotBase;
         glm::vec4 positionAtRobot;
         glm::vec4 rotationAtRobot;
+        std::vector<double> evolutionaryData;
         
         SensorBase(SensorBase&& other);
         SensorBase(const std::string& modelPath, const glm::vec4& positionAtRobot, const glm::vec4& rotationAtRobot);

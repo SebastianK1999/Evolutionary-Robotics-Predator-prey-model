@@ -3,6 +3,7 @@
 erppm::SensorBase::SensorBase(const std::string& modelPath, const glm::vec4& _positionAtRobot, const glm::vec4& _rotationAtRobot)
 : positionAtRobot(_positionAtRobot)
 , rotationAtRobot(_rotationAtRobot)
+, evolutionaryData(0)
 , body(modelPath)
 , parent(nullptr)
 {}
@@ -10,6 +11,7 @@ erppm::SensorBase::SensorBase(const std::string& modelPath, const glm::vec4& _po
 erppm::SensorBase::SensorBase(SensorBase&& other)
 : positionAtRobot(std::move(other.positionAtRobot))
 , rotationAtRobot(std::move(other.rotationAtRobot))
+, evolutionaryData(std::move(other.evolutionaryData))
 , body(std::move(other.body))
 , parent(std::move(other.parent))
 {}

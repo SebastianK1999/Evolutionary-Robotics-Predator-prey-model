@@ -1,10 +1,15 @@
-#include "Robotics/RobotBase.hpp"
-
 #include <iostream>
 #include <numeric>
 
+#include "glm/gtc/constants.hpp"
+
+#include "Robotics/LaserSensor.hpp"
+
+#include "Robotics/RobotBase.hpp"
+
 erppm::RobotBase::RobotBase(const std::string& modePlath)
-: body(modePlath)
+// : getBody()(modePlath)
+: network(0,0,0,0,Jimmy::Methods::transFuncs::tanh,0.001)
 , velocity(0,0)
 , angularVelocity(0)
 , type(EObjectTypeNone)
@@ -18,14 +23,14 @@ void erppm::RobotBase::draw(const glm::mat4& MVP, const glm::vec3& light) const 
     for(std::vector<SensorBase*>::const_iterator iter = sensors.begin();  iter != sensors.end(); iter=std::next(iter)){
         (*iter)->draw(MVP,light);
     }
-    body.draw(MVP, light);
+    getBody().draw(MVP, light);
 }
 
 // void erppm::RobotBase::run(double time, const std::vector<double>& controlInput);
 
 void erppm::RobotBase::updateSensorsPosition(){
     for(std::vector<SensorBase*>::const_iterator iter = sensors.begin(); iter != sensors.end(); iter=std::next(iter)){
-        (*iter)->updateLocation(body.position, body.rotation);
+        (*iter)->updateLocation(getBody().position, getBody().rotation);
     }
 }
 
@@ -130,19 +135,19 @@ const std::vector<double>& erppm::RobotBase::getSensorData() const {
 }
 
 glm::vec4& erppm::RobotBase::getPosition(){
-    return body.position;
+    return getBody().position;
 }
 
 glm::vec4& erppm::RobotBase::getRotation(){
-    return body.rotation;
+    return getBody().rotation;
 }
 
 glm::vec4& erppm::RobotBase::getScale(){
-    return body.scale;
+    return getBody().scale;
 }
 
 glm::vec3& erppm::RobotBase::getPrimaryColor(){
-    return body.primaryColor;
+    return getBody().primaryColor;
 }
 
 const size_t erppm::RobotBase::getControlInputSize() const noexcept{
@@ -154,7 +159,7 @@ const size_t erppm::RobotBase::getSensorDataSize() const noexcept{
 }
 
 void erppm::RobotBase::reinitializeDrawables(){
-    body.reinitialize();
+    getBody().reinitialize();
     for(std::vector<erppm::SensorBase *>::iterator iter = sensors.begin(); iter != sensors.end(); iter = std::next(iter)){
         (*iter)->reinitializeDrawables();
     }
@@ -163,4 +168,43 @@ void erppm::RobotBase::reinitializeDrawables(){
 void erppm::RobotBase::clearVelocity(){
     velocity = {0.0, 0.0};
     angularVelocity = 0.0;
+}
+
+void erppm::RobotBase::evolveFrom(const RobotBase& maleRobot, const RobotBase& femaleRobot){
+    network.evolveFrom(maleRobot.network, femaleRobot.network);
+    {
+        for
+        (
+            std::list<erppm::LaserSensor>::iterator
+            sensorIter = getSensorList<erppm::LaserSensor>().begin(),
+            maleSensorIter = getSensorList<erppm::LaserSensor>().begin(),
+            femaleSensorIter = getSensorList<erppm::LaserSensor>().begin()
+            ;
+            sensorIter != getSensorList<erppm::LaserSensor>().end()
+            ;
+            sensorIter = std::next(sensorIter),
+            maleSensorIter = std::next(maleSensorIter),
+            femaleSensorIter = std::next(femaleSensorIter) 
+        )
+        {
+            (*sensorIter).evolutionaryData[0] = (Jimmy::Misc::rand().binary() ? (*maleSensorIter).evolutionaryData[0] : (*femaleSensorIter).evolutionaryData[0]) + Jimmy::Misc::rand().decimal(-0.001,0.001);
+            if((*sensorIter).evolutionaryData[0] > glm::pi<float>()){
+                (*sensorIter).evolutionaryData[0] = -glm::two_pi<float>() + (*sensorIter).evolutionaryData[0];
+            }   
+            else if((*sensorIter).evolutionaryData[0] < -glm::pi<float>()){
+                (*sensorIter).evolutionaryData[0] = glm::two_pi<float>() + (*sensorIter).evolutionaryData[0];
+            }
+            (*sensorIter).evolutionaryData[1] = (Jimmy::Misc::rand().binary() ? (*maleSensorIter).evolutionaryData[1] : (*femaleSensorIter).evolutionaryData[1]) + Jimmy::Misc::rand().decimal(-0.001,0.001);
+            if((*sensorIter).evolutionaryData[1] > glm::half_pi<float>()){
+                (*sensorIter).evolutionaryData[1] = glm::half_pi<float>();
+            }   
+            else if((*sensorIter).evolutionaryData[1] < -glm::half_pi<float>()){
+                (*sensorIter).evolutionaryData[1] = -glm::half_pi<float>();
+            }
+            
+            (*sensorIter).positionAtRobot[0] = glm::cos((*sensorIter).evolutionaryData[0]);
+            (*sensorIter).positionAtRobot[1] = glm::sin((*sensorIter).evolutionaryData[0]);
+            (*sensorIter).rotationAtRobot[2] = (*sensorIter).evolutionaryData[1] + (*sensorIter).evolutionaryData[0];
+        } 
+    }
 }

@@ -5,26 +5,33 @@
 #include <vector>
 #include <string>
 #include <list>
+#include <algorithm>
 
 #include "oglUtil_OLD/Mesh.hpp"
 #include "Robotics/SensorBase.hpp"
 #include "Robotics/ObjectTypes.hpp"
 #include "Drawables/Floor.hpp"
 #include "Drawables/Wall.hpp"
+#include "JimmyNeuron/Jimmy.hpp"
+
 
 namespace erppm
 {
     class RobotBase
     {
     public:
-        Mesh body;
+        // Mesh body;
+        Jimmy::LoopingNet network;
         glm::dvec2 velocity;
         double angularVelocity;
         EObjectType type;
+        std::vector<SensorBase*> sensors;
         RobotBase(const std::string& modePlath);
         virtual ~RobotBase();
         void draw(const glm::mat4& MVP, const glm::vec3& light) const;
         virtual void run(double time, const std::vector<double>& controlInput) = 0;
+        virtual Mesh& getBody() noexcept = 0;  
+        virtual const Mesh& getBody() const noexcept = 0;  
         void updateSensorsPosition();
         void collide(std::vector<RobotBase*>& robots, const std::vector<Wall>& walls, const Floor& floor);
         void measure(const std::vector<RobotBase*>& robots, const std::vector<Wall>& walls, const Floor& floor);
@@ -33,6 +40,8 @@ namespace erppm
         std::list<T>& getSensorList();
         template <typename T>
         void addSensor(T&& sensor);
+        template <typename T>
+        void popSensors(int n = 1);
         glm::vec4& getPosition();
         glm::vec4& getRotation();
         glm::vec4& getScale();
@@ -41,10 +50,10 @@ namespace erppm
         const size_t getSensorDataSize() const noexcept;
         void reinitializeDrawables();
         void clearVelocity();
+        void evolveFrom(const RobotBase& maleRobot, const RobotBase& femaleRobot);
 
     protected:
         std::vector<double> sensorData;
-        std::vector<SensorBase*> sensors;
     };
 }
 

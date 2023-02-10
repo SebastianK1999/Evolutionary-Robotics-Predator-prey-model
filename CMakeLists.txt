@@ -45,7 +45,7 @@ elseif (APPLE)
 
 elseif (UNIX)
 
-    set(CMAKE_CXX_FLAGS "-Wall -g -std=c++20 -Wno-comment -Wno-sign-compare -Wno-reorder -Wno-unused-function")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3 -march=native -g -std=c++20 -Wno-comment -Wno-sign-compare -Wno-reorder -Wno-unused-function -pthread")
     FIND_PACKAGE(OpenGL REQUIRED) 
     FIND_PACKAGE(GLEW REQUIRED)
     add_definitions(-DUNIX)

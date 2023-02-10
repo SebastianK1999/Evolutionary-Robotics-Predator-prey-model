@@ -128,23 +128,24 @@ MainWindow::MainWindow(const int _width, const int _height, const std::string& _
     wallMinusX.primaryColor = wallsColor;
     addRobot(erppm::RoundRobot());
     robots[0]->getPrimaryColor() = {0.6, 0.2, 0.2};
-    float angle;
-    angle = 0;
-    robots[0]->addSensor(erppm::LaserSensor(glm::vec4(glm::cos(angle),glm::sin(angle),0.2,0), glm::vec4(0,0,angle,0)));
-    angle = 0.15;
-    robots[0]->addSensor(erppm::LaserSensor(glm::vec4(glm::cos(angle),glm::sin(angle),0.2,0), glm::vec4(0,0,angle,0)));
-    angle = -angle;
-    robots[0]->addSensor(erppm::LaserSensor(glm::vec4(glm::cos(angle),glm::sin(angle),0.2,0), glm::vec4(0,0,angle,0)));
-    angle = 0;
-    for(int i =0;i < 5; i++){
-        addRobot(erppm::RoundRobot());
-        robots.back()->getPosition().x = 5;
-        robots.back()->getPosition().y = i;
-        // robots.back()->getPrimaryColor() = glm::vec3(0.2);
-        robots.back()->getPrimaryColor() = glm::vec3(Misc::rand::get().decim(1.0f), Misc::rand::get().decim(1.0f), Misc::rand::get().decim(1.0f));
-        robots.back()->getRotation()[2] = Misc::rand::get().decim(glm::two_pi<float>());
-        robots.back()->addSensor(erppm::LaserSensor(glm::vec4(glm::cos(angle),glm::sin(angle),0.2,0), glm::vec4(0,0,angle,0)));
-    }
+    float anglePosition;
+    float angleOnRobot = 0;
+    anglePosition = 0;
+    robots[0]->addSensor(erppm::LaserSensor(glm::vec4(glm::cos(anglePosition),glm::sin(anglePosition),0.2,0), glm::vec4(0,0,anglePosition + angleOnRobot,0), {anglePosition, angleOnRobot}));
+    anglePosition = 0.15;
+    robots[0]->addSensor(erppm::LaserSensor(glm::vec4(glm::cos(anglePosition),glm::sin(anglePosition),0.2,0), glm::vec4(0,0,anglePosition + angleOnRobot,0), {anglePosition, angleOnRobot}));
+    anglePosition = -anglePosition;
+    robots[0]->addSensor(erppm::LaserSensor(glm::vec4(glm::cos(anglePosition),glm::sin(anglePosition),0.2,0), glm::vec4(0,0,anglePosition + angleOnRobot,0), {anglePosition, angleOnRobot}));
+    // angle = 0;
+    // for(int i =0;i < 5; i++){
+    //     addRobot(erppm::RoundRobot());
+    //     robots.back()->getPosition().x = 5;
+    //     robots.back()->getPosition().y = i;
+    //     // robots.back()->getPrimaryColor() = glm::vec3(0.2);
+    //     robots.back()->getPrimaryColor() = glm::vec3(Misc::rand::get().decim(1.0f), Misc::rand::get().decim(1.0f), Misc::rand::get().decim(1.0f));
+    //     robots.back()->getRotation()[2] = Misc::rand::get().decim(glm::two_pi<float>());
+    //     robots.back()->addSensor(erppm::LaserSensor(glm::vec4(glm::cos(angle),glm::sin(angle),0.2,0), glm::vec4(0,0,angle,0)));
+    // }
     mainCamera.radius = 13;
     mainCamera.minVerticalRotation = 0.0;
     mainCamera.maxVerticalRotation = glm::half_pi<float>();
@@ -252,6 +253,9 @@ void MainWindow::moveObjects(){
         }
     }
     else{
+        if(keyTracker.isJustReleased(GLFW_KEY_ENTER)){
+            std::swap(robots[0], robots[Jimmy::Misc::rand().randInt(1,robots.size())]);
+        }
         // Gamepad data
         int countAx;
         int countBtn;
@@ -293,6 +297,12 @@ void MainWindow::collisions(){
 }
 
 int main(int argc, char *argv[]) {
+    std::cout <<
+        "\t" << "⮜⮞⮝⮟ - Control camera" << "\n" <<
+        "\t" << "L3↕ - Control left engine" << "\n" <<
+        "\t" << "R3↕ - Control left engine" << "\n" <<
+        "\t" << "△ - Change robot" 
+    << "\n";
     oglu::setupOglu();
     oglu::setupGlfw();
     MainWindow window(800, 800, "Robot demo");
@@ -300,6 +310,7 @@ int main(int argc, char *argv[]) {
     window.keyTracker.addKey(GLFW_KEY_F11);
     window.keyTracker.addKey(GLFW_KEY_ESCAPE);
     window.keyTracker.addKey(GLFW_KEY_TAB);
+    window.keyTracker.addKey(GLFW_KEY_ENTER);
     window.keyTracker.addKey(GLFW_KEY_SPACE);
     window.keyTracker.addKey(GLFW_KEY_W);
     window.keyTracker.addKey(GLFW_KEY_S);
