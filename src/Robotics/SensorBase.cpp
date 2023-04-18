@@ -1,6 +1,6 @@
 #include "Robotics/SensorBase.hpp"
 
-erppm::SensorBase::SensorBase(const std::string& modelPath, const glm::vec4& _positionAtRobot, const glm::vec4& _rotationAtRobot)
+erppm::SensorBase::SensorBase(const std::filesystem::path& modelPath, const glm::vec3& _positionAtRobot, const glm::vec3& _rotationAtRobot)
 : positionAtRobot(_positionAtRobot)
 , rotationAtRobot(_rotationAtRobot)
 , evolutionaryData(0)
@@ -18,38 +18,34 @@ erppm::SensorBase::SensorBase(SensorBase&& other)
 
 erppm::SensorBase::~SensorBase(){}
 
-void erppm::SensorBase::draw(const glm::mat4& MVP, const glm::vec3& light) {
-    body.draw(MVP, light);
-}
-
-void erppm::SensorBase::updateLocation(glm::vec4 robotPosition, glm::vec4 robotRotation){
-    body.rotation = robotRotation + rotationAtRobot;
-    body.position = robotPosition + glm::vec4(
-        positionAtRobot.x * glm::cos(robotRotation[2]) - positionAtRobot.y * glm::sin(robotRotation[2]),
-        positionAtRobot.x * glm::sin(robotRotation[2]) + positionAtRobot.y * glm::cos(robotRotation[2]),
-        positionAtRobot.z,
-        0
+void erppm::SensorBase::updateLocation(glm::vec3 robotPosition, glm::vec3 robotRotation){
+    body.getRotation() = robotRotation + rotationAtRobot;
+    body.getPosition() = robotPosition + glm::vec3(
+        positionAtRobot.x * glm::cos(robotRotation.z) - positionAtRobot.y * glm::sin(robotRotation.z),
+        positionAtRobot.x * glm::sin(robotRotation.z) + positionAtRobot.y * glm::cos(robotRotation.z),
+        positionAtRobot.z
     );
+    updateDecorator();
 }
 
-// void erppm::SensorBase::measure(const std::vector<double>::iterator controlInputIterator, std::vector<double>::iterator measurementDataIterator){
-
+// void erppm::SensorBase::measure(const std::vector<double>::iterator controlInputIterator, std::vector<double>::iterator measurementDataIterator)
+// {
 // }
 
-glm::vec4& erppm::SensorBase::getPosition(){
-    return body.position;
+glm::vec3& erppm::SensorBase::getPosition(){
+    return body.getPosition();
 }
 
-glm::vec4& erppm::SensorBase::getRotation(){
-    return body.rotation;
+glm::vec3& erppm::SensorBase::getRotation(){
+    return body.getRotation();
 }
 
-glm::vec4& erppm::SensorBase::getScale(){
-    return body.scale;
+glm::vec3& erppm::SensorBase::getScale(){
+    return body.getScale();
 }
 
-glm::vec3& erppm::SensorBase::getPrimaryColor(){
-    return body.primaryColor;
+glm::vec4& erppm::SensorBase::getPrimaryColor(){
+    return body.getColor();
 }
 
 const size_t erppm::SensorBase::getMeasurementDataSize() const noexcept{

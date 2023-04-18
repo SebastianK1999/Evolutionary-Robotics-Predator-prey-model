@@ -54,15 +54,12 @@ elseif (UNIX)
 endif()
 SET(CORE_LIBS "${CORE_LIBS}" CACHE INTERNAL "CORE_LIBS")
 
-add_custom_target(RESOURCES_DIR SOURCES "${CMAKE_CURRENT_LIST_DIR}/res/")
-add_custom_command(TARGET RESOURCES_DIR POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    "${CMAKE_CURRENT_LIST_DIR}/res/"
-    "${CMAKE_CURRENT_LIST_DIR}/build/res/"
-)   
-# file(GLOB_RECURSE RESOURCES_DIR_FILES "${CMAKE_CURRENT_LIST_DIR}/res/*")
-# add_custom_command(TARGET RESOURCES_DIR POST_BUILD COMMAND ${CMAKE_COMMAND} -E create_symlink
-#                        "${CMAKE_CURRENT_LIST_DIR}/res/*" "${CMAKE_CURRENT_LIST_DIR}/build/res/*")
+# add_custom_target(RESOURCES_DIR SOURCES "${CMAKE_CURRENT_LIST_DIR}/res/")
+# add_custom_command(TARGET RESOURCES_DIR POST_BUILD
+#     COMMAND ${CMAKE_COMMAND} -E copy_directory
+#     "${CMAKE_CURRENT_LIST_DIR}/res/"
+#     "${CMAKE_CURRENT_LIST_DIR}/build/res/"
+# )
 
 add_subdirectory("submodules/") # linking to submodules
 add_subdirectory("src/") # adding sources

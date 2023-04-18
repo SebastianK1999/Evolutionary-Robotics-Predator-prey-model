@@ -6,8 +6,9 @@
 #include <string>
 #include <list>
 #include <algorithm>
+#include <filesystem>
 
-#include "oglUtil_OLD/Mesh.hpp"
+#include "oglUtil/drawables/Mesh.hpp"
 #include "Robotics/SensorBase.hpp"
 #include "Robotics/ObjectTypes.hpp"
 #include "Drawables/Floor.hpp"
@@ -20,20 +21,17 @@ namespace erppm
     class RobotBase
     {
     public:
-        // Mesh body;
+        oglu::Mesh body;
         Jimmy::LoopingNet network;
         glm::dvec2 velocity;
         double angularVelocity;
         EObjectType type;
         std::vector<SensorBase*> sensors;
-        RobotBase(const std::string& modePlath);
+        RobotBase(const std::filesystem::path& modePlath);
         virtual ~RobotBase();
-        void draw(const glm::mat4& MVP, const glm::vec3& light) const;
         virtual void run(double time, const std::vector<double>& controlInput) = 0;
-        virtual Mesh& getBody() noexcept = 0;  
-        virtual const Mesh& getBody() const noexcept = 0;  
         void updateSensorsPosition();
-        void collide(std::vector<RobotBase*>& robots, const std::vector<Wall>& walls, const Floor& floor);
+        void collide(const std::vector<RobotBase*>& robots, const std::vector<Wall>& walls, const Floor& floor);
         void measure(const std::vector<RobotBase*>& robots, const std::vector<Wall>& walls, const Floor& floor);
         const std::vector<double>& getSensorData() const;
         template <typename T>
@@ -42,10 +40,10 @@ namespace erppm
         void addSensor(T&& sensor);
         template <typename T>
         void popSensors(int n = 1);
-        glm::vec4& getPosition();
-        glm::vec4& getRotation();
-        glm::vec4& getScale();
-        glm::vec3& getPrimaryColor();
+        glm::vec3& getPosition() const noexcept;
+        glm::vec3& getRotation() const noexcept;
+        glm::vec3& getScale() const noexcept;
+        glm::vec4& getPrimaryColor() const noexcept;
         virtual const size_t getControlInputSize() const noexcept;
         const size_t getSensorDataSize() const noexcept;
         void reinitializeDrawables();

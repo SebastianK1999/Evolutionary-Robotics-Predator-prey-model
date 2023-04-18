@@ -1,21 +1,26 @@
 
 # pragma once 
 
-#include "oglUtil/drawables/Drawable.hpp"
+#include "oglUtil/drawableSystem/DrawableInstance.hpp"
 
 namespace erppm
 {
-    class Floor : public virtual oglu::Drawable {
+    class Floor : public oglu::DrawableInstance
+    {
     public:
-        glm::vec3 primaryColor;
+        static constexpr char key[] = "erppm::Floor";
+        static void drawInstances(const glm::mat4& MVP, const glm::vec3& light);
+        oglu::RegisteredDrawable& getRegistry() const noexcept override;
         Floor();
-        void setShaders();
-        void setBuffers();
-        void draw(const glm::mat4& MVP, const glm::vec3& light) const;
-        void reinitialize();
+        Floor(const Floor& other)             = default;
+        Floor(Floor&& other)                  = default;
+        Floor& operator=(const Floor& other)  = default;
+        Floor& operator=(Floor&& other)       = default;
+        virtual ~Floor()                      = default;
+
     private:
-        static const GLfloat vertexBufferData[];
+        static std::shared_ptr<oglu::RegisteredDrawable> staticRegistryPointer;
+
     };
-    
 }
 

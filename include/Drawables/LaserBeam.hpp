@@ -1,21 +1,24 @@
 #pragma once
 
-#include "oglUtil/drawables/Drawable.hpp"
+#include "oglUtil/drawableSystem/DrawableInstance.hpp"
 
 namespace erppm
 {
-    class LaserBeam : public virtual oglu::Drawable {
+    class LaserBeam : public oglu::DrawableInstance 
+    {
     public:
-        glm::vec3 primaryColor;
-        LaserBeam(const LaserBeam& other);
-        LaserBeam(LaserBeam&& other);
+        static constexpr char key[] = "erppm::LaserBeam";
+        static void drawInstances(const glm::mat4& MVP, const glm::vec3& light);
+        oglu::RegisteredDrawable& getRegistry() const noexcept override;
         LaserBeam();
-        void setShaders();
-        void setBuffers();
-        void draw(const glm::mat4& MVP, const glm::vec3 color) const;
-        void reinitialize();
+        LaserBeam(const LaserBeam& other)             = default;
+        LaserBeam(LaserBeam&& other)                  = default;
+        LaserBeam& operator=(const LaserBeam& other)  = default;
+        LaserBeam& operator=(LaserBeam&& other)       = default;
+        virtual ~LaserBeam()                          = default;
+
+        static std::shared_ptr<oglu::RegisteredDrawable> staticRegistryPointer;
     private:
-        static const GLfloat vertexBufferData[];
+
     };
-    
 }

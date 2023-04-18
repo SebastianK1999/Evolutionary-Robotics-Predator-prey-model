@@ -12,7 +12,8 @@ template <typename T>
 void erppm::RobotBase::addSensor(T&& sensor){
     std::list<T>& sensors_T = getSensorList<T>();
     
-    sensor.body.primaryColor = getBody().primaryColor;
+    sensor.body.getColor() = body.getColor();
+    sensor.updateDecoratorColors(body.getColor());
     sensors_T.push_back(std::move(sensor));
     sensors.push_back( &(sensors_T.back()) );
     sensors_T.back().parent = this;

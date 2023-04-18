@@ -7,9 +7,9 @@
 
 #include "Robotics/RobotBase.hpp"
 
-erppm::RobotBase::RobotBase(const std::string& modePlath)
-// : getBody()(modePlath)
-: network(0,0,0,0,Jimmy::Methods::transFuncs::tanh,0.001)
+erppm::RobotBase::RobotBase(const std::filesystem::path& modePlath)
+: body(modePlath)
+, network(0,0,0,0,Jimmy::Methods::transFuncs::tanh,0.001)
 , velocity(0,0)
 , angularVelocity(0)
 , type(EObjectTypeNone)
@@ -19,31 +19,24 @@ erppm::RobotBase::RobotBase(const std::string& modePlath)
 
 erppm::RobotBase::~RobotBase(){}
 
-void erppm::RobotBase::draw(const glm::mat4& MVP, const glm::vec3& light) const {
-    for(std::vector<SensorBase*>::const_iterator iter = sensors.begin();  iter != sensors.end(); iter=std::next(iter)){
-        (*iter)->draw(MVP,light);
-    }
-    getBody().draw(MVP, light);
-}
-
 // void erppm::RobotBase::run(double time, const std::vector<double>& controlInput);
 
 void erppm::RobotBase::updateSensorsPosition(){
     for(std::vector<SensorBase*>::const_iterator iter = sensors.begin(); iter != sensors.end(); iter=std::next(iter)){
-        (*iter)->updateLocation(getBody().position, getBody().rotation);
+        (*iter)->updateLocation(body.getPosition(), body.getRotation());
     }
 }
 
-void erppm::RobotBase::collide(std::vector<RobotBase*>& robots, const std::vector<Wall>& walls, const Floor& floor){
+void erppm::RobotBase::collide(const std::vector<RobotBase*>& robots, const std::vector<Wall>& walls, const Floor& floor){
     constexpr bool bounceOn = true;
     constexpr float robotRadius = 1;
-    for(std::vector<RobotBase*>::iterator iter = robots.begin(); iter != robots.end(); iter=std::next(iter)){
+    for(std::vector<RobotBase*>::const_iterator iter = robots.begin(); iter != robots.end(); iter=std::next(iter)){
         if((*iter) != this){
-            glm::vec4& robot1Pos = this->getPosition();
-            glm::vec4& robot2Pos = (*iter)->getPosition();
-            glm::vec4 relCenter = (robot1Pos + robot2Pos)*0.5f;
+            glm::vec3& robot1Pos = this->getPosition();
+            glm::vec3& robot2Pos = (*iter)->getPosition();
+            glm::vec3 relCenter = (robot1Pos + robot2Pos)*0.5f;
             if(std::pow(robot1Pos.x - robot2Pos.x,2) + std::pow(robot1Pos.y - robot2Pos.y,2) < std::pow(1+1,2)){
-                glm::vec4 direction = glm::normalize(robot1Pos - relCenter);
+                glm::vec3 direction = glm::normalize(robot1Pos - relCenter);
                 robot1Pos = relCenter + direction;
                 robot2Pos = relCenter - direction;
                 // possible change of velocity, due to collision 
@@ -53,20 +46,20 @@ void erppm::RobotBase::collide(std::vector<RobotBase*>& robots, const std::vecto
     // Walls
     for(std::vector<Wall>::const_iterator wallIter = walls.begin(); wallIter != walls.end(); wallIter = std::next(wallIter)){
     
-        glm::vec4 relativeCenter = (*wallIter).position - this->getPosition();
+        glm::vec3 relativeCenter = (*wallIter).getPosition() - this->getPosition();
         //* With commented out code, scale x y has to be as close as possible 
         // if(abs(relativeCenter.x)*(*wallIter).scale.y < abs(relativeCenter.y)*(*wallIter).scale.x){
         //* Now scale has to be equal
-        if(abs(relativeCenter.x)*(*wallIter).scale.y < abs(relativeCenter.y)*(*wallIter).scale.x){
-            if(relativeCenter.y > 0 && (*wallIter).position.y - this->getPosition().y < (*wallIter).scale.y+robotRadius){
-                this->getPosition().y = -((*wallIter).scale.y+robotRadius) + (*wallIter).position.y;
+        if(abs(relativeCenter.x)*(*wallIter).getScale().y < abs(relativeCenter.y)*(*wallIter).getScale().x){
+            if(relativeCenter.y > 0 && (*wallIter).getPosition().y - this->getPosition().y < (*wallIter).getScale().y+robotRadius){
+                this->getPosition().y = -((*wallIter).getScale().y+robotRadius) + (*wallIter).getPosition().y;
                 if constexpr(bounceOn){
                     this->velocity.y *= -0.9;
                     this->velocity.x *= 0.9;
                 }
             }
-            else if(relativeCenter.y < 0 && (*wallIter).position.y - this->getPosition().y > -((*wallIter).scale.y+robotRadius)){
-                this->getPosition().y = (*wallIter).scale.y+robotRadius + (*wallIter).position.y;
+            else if(relativeCenter.y < 0 && (*wallIter).getPosition().y - this->getPosition().y > -((*wallIter).getScale().y+robotRadius)){
+                this->getPosition().y = (*wallIter).getScale().y+robotRadius + (*wallIter).getPosition().y;
                 if constexpr(bounceOn){
                     this->velocity.y *= -0.9;
                     this->velocity.x *= 0.9;
@@ -74,15 +67,15 @@ void erppm::RobotBase::collide(std::vector<RobotBase*>& robots, const std::vecto
             }
         }
         else{
-            if(relativeCenter.x > 0 && (*wallIter).position.x - this->getPosition().x < (*wallIter).scale.x+robotRadius){
-                this->getPosition().x = -((*wallIter).scale.x+robotRadius) + (*wallIter).position.x;
+            if(relativeCenter.x > 0 && (*wallIter).getPosition().x - this->getPosition().x < (*wallIter).getScale().x+robotRadius){
+                this->getPosition().x = -((*wallIter).getScale().x+robotRadius) + (*wallIter).getPosition().x;
                 if constexpr(bounceOn){
                     this->velocity.y *= 0.9;
                     this->velocity.x *= -0.9;
                 }
             }
-            else if(relativeCenter.x < 0 && (*wallIter).position.x - this->getPosition().x > -((*wallIter).scale.x+robotRadius)){
-                this->getPosition().x = (*wallIter).scale.x+robotRadius + (*wallIter).position.x;
+            else if(relativeCenter.x < 0 && (*wallIter).getPosition().x - this->getPosition().x > -((*wallIter).getScale().x+robotRadius)){
+                this->getPosition().x = (*wallIter).getScale().x+robotRadius + (*wallIter).getPosition().x;
                 if constexpr(bounceOn){
                     this->velocity.y *= 0.9;
                     this->velocity.x *= -0.9;
@@ -91,30 +84,30 @@ void erppm::RobotBase::collide(std::vector<RobotBase*>& robots, const std::vecto
         }
     }
     // Floor
-    if(this->getPosition().x - 1 < -floor.scale.x){
-        this->getPosition().x = -floor.scale.x + 1;
+    if(this->getPosition().x - 1 < -floor.getScale().x){
+        this->getPosition().x = -floor.getScale().x + 1;
         if constexpr(bounceOn){
             this->velocity.y *=  0.9;
             this->velocity.x *= -0.9;
         }
     }
-    else if(this->getPosition().x + 1 > floor.scale.x){
-        this->getPosition().x = floor.scale.x - 1;
+    else if(this->getPosition().x + 1 > floor.getScale().x){
+        this->getPosition().x = floor.getScale().x - 1;
         if constexpr(bounceOn){
             this->velocity.y *=  0.9;
             this->velocity.x *= -0.9;
         }
     }
 
-    if(this->getPosition().y - 1 < -floor.scale.y){
-        this->getPosition().y = -floor.scale.y + 1;
+    if(this->getPosition().y - 1 < -floor.getScale().y){
+        this->getPosition().y = -floor.getScale().y + 1;
         if constexpr(bounceOn){
             this->velocity.y *= -0.9;
             this->velocity.x *=  0.9;
         }
     }
-    else if(this->getPosition().y + 1 > floor.scale.y){
-        this->getPosition().y = floor.scale.y - 1;
+    else if(this->getPosition().y + 1 > floor.getScale().y){
+        this->getPosition().y = floor.getScale().y - 1;
         if constexpr(bounceOn){
             this->velocity.y *= -0.9;
             this->velocity.x *=  0.9;
@@ -134,20 +127,24 @@ const std::vector<double>& erppm::RobotBase::getSensorData() const {
     return sensorData;
 }
 
-glm::vec4& erppm::RobotBase::getPosition(){
-    return getBody().position;
+glm::vec3& erppm::RobotBase::getPosition() const noexcept
+{
+    return body.getPosition();
 }
 
-glm::vec4& erppm::RobotBase::getRotation(){
-    return getBody().rotation;
+glm::vec3& erppm::RobotBase::getRotation() const noexcept
+{
+    return body.getRotation();
 }
 
-glm::vec4& erppm::RobotBase::getScale(){
-    return getBody().scale;
+glm::vec3& erppm::RobotBase::getScale() const noexcept
+{
+    return body.getScale();
 }
 
-glm::vec3& erppm::RobotBase::getPrimaryColor(){
-    return getBody().primaryColor;
+glm::vec4& erppm::RobotBase::getPrimaryColor() const noexcept
+{
+    return body.getColor();
 }
 
 const size_t erppm::RobotBase::getControlInputSize() const noexcept{
@@ -159,10 +156,10 @@ const size_t erppm::RobotBase::getSensorDataSize() const noexcept{
 }
 
 void erppm::RobotBase::reinitializeDrawables(){
-    getBody().reinitialize();
-    for(std::vector<erppm::SensorBase *>::iterator iter = sensors.begin(); iter != sensors.end(); iter = std::next(iter)){
-        (*iter)->reinitializeDrawables();
-    }
+    // getBody().reinitialize();
+    // for(std::vector<erppm::SensorBase *>::iterator iter = sensors.begin(); iter != sensors.end(); iter = std::next(iter)){
+    //     (*iter)->reinitializeDrawables();
+    // }
 }
 
 void erppm::RobotBase::clearVelocity(){

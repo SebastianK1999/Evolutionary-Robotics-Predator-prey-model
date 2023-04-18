@@ -50,6 +50,7 @@ vsbuild/
 wbuild/
 ubuild/
 *.code-workspace
+*.cxxc
 
 # all hidden files !except 
 .*

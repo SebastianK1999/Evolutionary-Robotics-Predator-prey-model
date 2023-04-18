@@ -1,16 +1,25 @@
 #include <cassert>
+#include <filesystem>
 
 #include "glm/gtc/constants.hpp"
 
 #include "Robotics/RoundRobot.hpp"
 
+const std::filesystem::path erppm::RoundRobot::modelPath = std::filesystem::path() / ".." / "res" / "obj_models" / "round_robot";
+
+void erppm::RoundRobot::draw(const glm::mat4& MVP, const glm::vec3& light)
+{
+    oglu::Mesh::drawInstances(erppm::RoundRobot::modelPath, MVP, light);
+}
 
 erppm::RoundRobot::RoundRobot()
-: RobotBase("../res/obj_models/round_robot")
-, body("../res/obj_models/round_robot")
+: RobotBase(modelPath)
 {
-        // getBody() = Mesh("../res/obj_models/round_robot");
-
+    auto& registry = oglu::Mesh::getRegistry(erppm::RoundRobot::modelPath);
+    if(registry.size() == 1)
+    {
+        registry.loadShaders(std::filesystem::path() / ".." / "res" / "shaders" / "greenScreenTexture");
+    }
 }
 
 erppm::RoundRobot::~RoundRobot(){}
@@ -27,31 +36,23 @@ void erppm::RoundRobot::run(double time, const std::vector<double>& controlInput
 
     const float fromMotorAngularVelocity = (right_v - left_v) / wheelPlacementRadius;
     angularVelocity += (fromMotorAngularVelocity - angularVelocity) * friction * time;
-    getBody().rotation[2] += angularVelocity * time;
+    body.getRotation().z += angularVelocity * time;
 
     const float fromMotorScalarVelocity = (right_v+left_v);
-    const glm::dvec2 fromMotorVelocity = {fromMotorScalarVelocity * cosf(getBody().rotation[2]), fromMotorScalarVelocity * sinf(getBody().rotation[2])};
+    const glm::dvec2 fromMotorVelocity = {fromMotorScalarVelocity * cosf(body.getRotation().z), fromMotorScalarVelocity * sinf(body.getRotation().z)};
     velocity += (fromMotorVelocity - velocity) * friction * time;
-    getBody().position.x += velocity.x * time;
-    getBody().position.y += velocity.y * time;
+    body.getPosition().x += velocity.x * time;
+    body.getPosition().y += velocity.y * time;
     
 
     //* If momentum wasn't a vector 
     // float fromMotorVelocity = (right_v+left_v);
     // fromMotorVelocity = (fromMotorVelocity - momentum / mass) * friction * time;
     // momentum += (fromMotorVelocity * mass);
-    // getBody().position.x += cosf(getBody().rotation[2]) * momentum / mass * time;
-    // getBody().position.y += sinf(getBody().rotation[2]) * momentum / mass * time;
+    // body.getPosition().x += cosf(body.getRotation().z) * momentum / mass * time;
+    // body.getPosition().y += sinf(body.getRotation().z) * momentum / mass * time;
 }
 
 const size_t erppm::RoundRobot::getControlInputSize() const noexcept{
     return 2;
-}
-
-Mesh& erppm::RoundRobot::getBody() noexcept {
-    return erppm::RoundRobot::getBody();
-}
-
-const Mesh& erppm::RoundRobot::getBody() const noexcept {
-    return erppm::RoundRobot::getBody();
 }
