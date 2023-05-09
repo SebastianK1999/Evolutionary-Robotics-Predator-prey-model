@@ -15,7 +15,8 @@ namespace erppm
     public:
         void clear();
         void sortRound(const erppm::EObjectType type = erppm::EObjectTypeNone);
-        void sortBase(const erppm::EObjectType type = erppm::EObjectTypeNone);
+        void sortBaseIncremental(const erppm::EObjectType type = erppm::EObjectTypeNone);
+        void sortBaseDecremental(const erppm::EObjectType type = erppm::EObjectTypeNone);
         void reserveRound(const size_t capacity, const erppm::EObjectType type);
         void emplaceBackRound(erppm::RoundRobot&& robot, const erppm::EObjectType type);
         const std::vector<erppm::RoundRobot*>& getRound(const erppm::EObjectType type = erppm::EObjectTypeNone) const;

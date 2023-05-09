@@ -1,3 +1,5 @@
+#include <utility>
+
 #include "glm/gtc/constants.hpp"
 
 #include "JimmyNeuron/Misc/Misc.hpp"
@@ -162,7 +164,6 @@ float erppm::env::setRobotsOnLaser(const std::vector<erppm::RobotBase*>& robots,
 
 float erppm::env::setRobotsOnLaserSame(const std::vector<erppm::RobotBase*>& robots, erppm::RobotBase*const referenceRobot, const int laserOnSensor)
 {
-    const float rotation = Jimmy::Misc::rand().decimal(0, glm::two_pi<float>());
     std::list<erppm::LaserSensor>::iterator begin = referenceRobot->getSensorList<erppm::LaserSensor>().begin();
     int laserSensorIndex = Jimmy::Misc::rand().randInt(0, laserOnSensor);
     const float positionAngle = (*std::next(begin, laserSensorIndex)).evolutionaryData[0] + referenceRobot->getRotation().z;
@@ -177,6 +178,9 @@ float erppm::env::setRobotsOnLaserSame(const std::vector<erppm::RobotBase*>& rob
         positionRadius * glm::sin(positionAngle),
         0.0f
     };
+    begin = robots[0]->getSensorList<erppm::LaserSensor>().begin();
+    laserSensorIndex = Jimmy::Misc::rand().randInt(0, laserOnSensor);
+    const float rotation = glm::pi<float>() - (*std::next(begin, laserSensorIndex)).evolutionaryData[0] + referenceRobot->getRotation().z;
     for(unsigned int robotIndex = 0; robotIndex < robots.size(); robotIndex++)
     {
         robots[robotIndex]->getPosition() = position;
@@ -187,11 +191,25 @@ float erppm::env::setRobotsOnLaserSame(const std::vector<erppm::RobotBase*>& rob
     return positionAngle;
 }
 
-void erppm::env::initRobots
-(
+void erppm::env::hideWalls()
+{
+    for (auto& wall : *currentWallSet)
+    {
+        wall.getPosition().z = -100;
+    }
+}
+
+void erppm::env::showWalls()
+{
+    for (auto& wall: *currentWallSet)
+    {
+        wall.getPosition().z = 0;
+    }
+}
+
+void erppm::env::initRobots(
     const erppm::EObjectType robotType,
-    const glm::vec4& color
-)
+    const glm::vec4 &color)
 {
     if (robots.getBase(robotType).size() != 0)
     {
@@ -240,23 +258,23 @@ void erppm::env::initRobots
                 ));
             }
         }
-        // anglePosition = -glm::pi<float>();
-        // angleOnRobot = 0;
-        // robot.addSensor ( erppm::LaserSensor
-        // (
-        //     glm::vec3(glm::cos(anglePosition), glm::sin(anglePosition), 0.2),
-        //     glm::vec3(0, 0, (angleOnRobot + anglePosition)),
-        //     {anglePosition, angleOnRobot}
-        // ));
+        anglePosition = -glm::pi<float>();
+        angleOnRobot = 0;
+        robot.addSensor ( erppm::LaserSensor
+        (
+            glm::vec3(glm::cos(anglePosition), glm::sin(anglePosition), 0.2),
+            glm::vec3(0, 0, (angleOnRobot + anglePosition)),
+            {anglePosition, angleOnRobot}
+        ));
         assert(erppm::cfg::numberOfSensors == robot.sensors.size());
         robot.getRotation()[2] = Jimmy::Misc::rand().decimal(glm::two_pi<float>());
         robot.type = robotType;
         robot.network.addNeurons
         (
             robot.getSensorDataSize(),
-            20,
+            erppm::cfg::numberOfHiddenNeurons,
             robot.getControlInputSize(), 
-            20
+            erppm::cfg::numberOfMemoryNeurons
         );
         robot.network.mutate();
     }
@@ -270,24 +288,60 @@ erppm::env& erppm::env::get()
 
 void erppm::env::useScenario_demo()
 {
-    // TODO resize/reserve instance vectors
+    const std::string key = "demo";
     setupField(30.0f, 30.0f);
-    walls.clear();
+    hideWalls();
+    auto wallSetIterator = allWallSets.find(key);
+    if (wallSetIterator != allWallSets.end())
+    {
+        currentWallSet = &(wallSetIterator->second);
+        showWalls();
+        return;
+    }
+    allWallSets.emplace(key, std::vector<erppm::Wall>());
+    currentWallSet = &(allWallSets[key]);
     for(int i = 0; i < 5; i++)
     {
-        walls.emplace_back(erppm::Wall());
-        walls.back().getPosition().x = 10 + 2*i;
-        walls.back().getPosition().y = 2*i;
-        walls.back().getScale() *= 2;
-        walls.back().getColor() = {0.4, 0.3, 0.7, 1.0};
+        placeWall(10 + 2*i, 2*i);
     }
+}
+
+void erppm::env::useScenario_empty()
+{
+    std::string key = "empty";
+    setupField(30.0f, 30.0f);
+    hideWalls();
+    auto wallSetIterator = allWallSets.find(key);
+    if (wallSetIterator != allWallSets.end())
+    {
+        currentWallSet = &(wallSetIterator->second);
+        showWalls();
+        return;
+    }
+    allWallSets.emplace(key, std::vector<erppm::Wall>());
+    currentWallSet = &(allWallSets[key]);
+}
+
+void erppm::env::useScenario_0()
+{
+    // TODO
+}
+
+void erppm::env::useScenario_1()
+{
+    // TODO
+}
+
+void erppm::env::setupRobot_demo()
+{
+    // TODO resize/reserve instance vectors
     robots.clear();
-    erppm::env::get().initRobots
+    initRobots
     (
         erppm::EObjectTypePredator,
         {-1.0f, -1.0f, -1.0f, -1.0f}
     );
-    erppm::env::get().initRobots
+    initRobots
     (
         erppm::EObjectTypePrey,
         {-1.0f, -1.0f, -1.0f, -1.0f}
@@ -296,10 +350,9 @@ void erppm::env::useScenario_demo()
     setRobotsRandomConcentric(robots.getBase(erppm::EObjectTypePrey));
 }
 
-void erppm::env::useScenario_empty()
+void erppm::env::setupRobot_roles()
 {
-    setupField(30.0f, 30.0f);
-    walls.clear();
+    robots.clear();
     initRobots
     (
         erppm::EObjectTypePredator,
@@ -314,14 +367,13 @@ void erppm::env::useScenario_empty()
     setRobotsRandomConcentricSame(robots.getBase(erppm::EObjectTypePrey));
 }
 
-void erppm::env::useScenario_0()
+void erppm::env::placeWall(const float x, const float y)
 {
-    // TODO
-}
-
-void erppm::env::useScenario_1()
-{
-    // TODO
+        currentWallSet->emplace_back(std::move(erppm::Wall()));
+        currentWallSet->back().getPosition().x = x;
+        currentWallSet->back().getPosition().y = y;
+        currentWallSet->back().getScale() *= 2;
+        currentWallSet->back().getColor() = {0.4, 0.3, 0.7, 1.0};
 }
 
 void erppm::env::setupField(const float& xSize, const float& ySize)
@@ -363,7 +415,13 @@ erppm::env::env()
     , wallMinusY()
     , wallPlusX()
     , wallMinusX()
-    , walls()
+    , currentWallSet()
+    , allWallSets()
 {
-    useScenario_empty();
+    std::string key = "empty";
+    setupField(30.0f, 30.0f);
+    allWallSets.emplace(key, std::vector<erppm::Wall>());
+    currentWallSet = &allWallSets[key];
+    robots.clear();
+
 }

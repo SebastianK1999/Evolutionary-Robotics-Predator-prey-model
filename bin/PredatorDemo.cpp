@@ -4,6 +4,8 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
+#include "JimmyNeuron/Experimental/LameNetwork/LameNetwork.hpp"
+
 #include "oglUtil_OLD/Misc.hpp"
 
 #include "oglUtil/ogluTools.hpp"
@@ -13,6 +15,7 @@
 #include "Robotics/RoundRobot.hpp"
 #include "Robotics/LaserSensor.hpp"
 #include "Simulation/Env.hpp"
+#include "Simulation/Cfg.hpp"
 
 
 class MainWindow 
@@ -25,6 +28,7 @@ public:
 
     std::vector<erppm::RobotBase*> robots;
     std::vector<double> mainRobotInput;
+    // std::vector<Jimmy::E::LameNetwork> networks;
     oglu::Camera mainCamera;
 
     template <typename T>
@@ -61,6 +65,7 @@ MainWindow::MainWindow(const int _width, const int _height, const std::string& _
     , mainRobotIndex(0)
     , robots()
     , mainRobotInput()
+    // , networks(erppm::cfg::numberOfRobots, Jimmy::E::LameNetwork(0,0,0,0,Jimmy::Methods::transFuncs::tanh,0))
     , mainCamera(getGlfwWindowPtr())
 {
     glEnable(GL_DEPTH_TEST);
@@ -73,10 +78,16 @@ MainWindow::MainWindow(const int _width, const int _height, const std::string& _
     glfwSetInputMode(getGlfwWindowPtr(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwPollEvents();
 
-    erppm::env::get().useScenario_demo();
+    erppm::env::get().useScenario_empty();
     erppm::env::get().setupRobot_demo();
 
     mainRobotInput.resize(erppm::env::get().robots.getBase()[mainRobotIndex]->getControlInputSize());    
+
+    for (auto& robot : erppm::env::get().robots.getBase())
+    {
+        robot->network.loadFromFile("./saves/pred_basic.100/predator_0.jn");
+    }
+    erppm::env::get().robots.getBase()[mainRobotIndex]->network.loadFromFile("./saves/prey_basic.10/prey_0.jn");
 
     mainCamera.position.z = 2;
     mainCamera.position.x = -2;
@@ -149,6 +160,11 @@ void MainWindow::moveObjects(){
             mainRobotInput[1] = -(abs(axes[4]) > 0.1 ? axes[4] : 0.0);
             erppm::env::get().robots.getBase()[mainRobotIndex]->run(dtime, mainRobotInput);
         }
+        for (auto& robot : erppm::env::get().robots.getBase())
+        {
+            robot->network.run(robot->getSensorData());
+            robot->run(dtime, robot->network.getOutput());
+        }
     }
     time0 = time;
 }
@@ -161,8 +177,9 @@ void MainWindow::collisions(){
             (*iter)->updateSensorsPosition();
         }
         for(std::vector<erppm::RobotBase*>::const_iterator iter = erppm::env::get().robots.getBase().begin(); iter != erppm::env::get().robots.getBase().end(); iter = std::next(iter)){
-            (*iter)->measure(erppm::env::get().robots.getBase(), *(erppm::env::get().currentWallSet), erppm::env::get().floor);
+            (*iter)->measure({erppm::env::get().robots.getBase()[mainRobotIndex], (*iter)}, *(erppm::env::get().currentWallSet), erppm::env::get().floor);
         }
+        erppm::env::get().robots.getBase()[mainRobotIndex]->measure(erppm::env::get().robots.getBase(), *(erppm::env::get().currentWallSet), erppm::env::get().floor);
     }
 }
 

@@ -27,7 +27,8 @@ int main(int argc, char *argv[])
     if constexpr (ERPPM_CFG_ALLOW_VISUALS)
     {
         oglu::Window wInitGlew(800, 800, "Init GLEW");
-        erppm::env::get().useScenario_empty();
+        erppm::env::get().useScenario_demo();
+        erppm::env::get().setupRobot_roles();
     }
     if(argc == 2)
     {

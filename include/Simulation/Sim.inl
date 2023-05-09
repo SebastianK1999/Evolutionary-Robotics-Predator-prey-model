@@ -26,7 +26,8 @@ template <
     bool OPEN_WINDOW,
     int PREDATOR_LEARNING_MODE,
     int PREY_LEARNING_MODE,
-    bool PLACE_ON_LASER_SENORS
+    bool PLACE_ON_LASER_SENORS,
+    bool TARGET_DISAPPEAR
 >
 void erppm::sim::runRobot
 (
@@ -34,11 +35,12 @@ void erppm::sim::runRobot
     float preyPositionAngle
 )
 {
-    constexpr bool DISAPPEAR_TARGET = true;
-
+    float preyPositionAngle_predator = preyPositionAngle;
+    float preyPositionAngle_prey = preyPositionAngle;
+    
     const std::vector<erppm::RobotBase*>& predatorRobots = erppm::env::get().robots.getBase(erppm::EObjectTypePredator);
     const std::vector<erppm::RobotBase*>& preyRobots = erppm::env::get().robots.getBase(erppm::EObjectTypePrey);
-    const std::vector<erppm::Wall>& walls = erppm::env::get().walls;
+    const std::vector<erppm::Wall>& walls = *erppm::env::get().currentWallSet;
     const erppm::Floor& floor = erppm::env::get().floor;
     
     static const unsigned int processor_count = std::thread::hardware_concurrency();
@@ -58,28 +60,28 @@ void erppm::sim::runRobot
 
     for (unsigned int robotIndex = begin; robotIndex < end; robotIndex++)
     {
-        bool targetGone = false;
         bool preyCaught = false;
         erppm::RobotBase& predatorRobot = *(predatorRobots[robotIndex]);
         erppm::RobotBase& preyRobot = *(preyRobots[robotIndex]);
-        std::vector<erppm::RobotBase*> robotsInCurrentRun = {&predatorRobot, &preyRobot};
-        predatorRobot.network.clearOutputValues();
-        preyRobot.network.clearOutputValues();
-        unsigned int stepNumber = 0;
+        std::vector<erppm::RobotBase*> robotsInCurrentRun_predator = {&predatorRobot, &preyRobot};
+        std::vector<erppm::RobotBase*> robotsInCurrentRun_prey = {&predatorRobot, &preyRobot};
+        predatorRobot.network.clearValues();
+        preyRobot.network.clearValues();
 
+        double lastOutput_predator[2] = {0,0};
+        double lastOutput_prey[2] = {0,0};
+        unsigned int stepNumber = 0;
         for(; stepNumber< numberOfStepsPerGeneration; stepNumber++)
         {
-            for (std::vector<erppm::RobotBase*>::iterator iter = robotsInCurrentRun.begin(); iter != robotsInCurrentRun.end(); iter = std::next(iter))
-            {
-                (*iter)->measure(robotsInCurrentRun, walls, floor);
-            }
             if constexpr (PREDATOR_LEARNING_MODE != 0)
             {
+                predatorRobot.measure(robotsInCurrentRun_predator, walls, floor);
                 predatorRobot.network.run(predatorRobot.getSensorData());
                 predatorRobot.run(stepDuration, predatorRobot.network.getOutput());
             }
             if constexpr (PREY_LEARNING_MODE != 0)
             {
+                preyRobot.measure(robotsInCurrentRun_prey, walls, floor);
                 preyRobot.network.run(preyRobot.getSensorData());
                 preyRobot.run(stepDuration, preyRobot.network.getOutput());
             }
@@ -88,9 +90,14 @@ void erppm::sim::runRobot
                 preyCaught = true;
                 break;
             }
-            for (std::vector<erppm::RobotBase*>::iterator iter = robotsInCurrentRun.begin(); iter != robotsInCurrentRun.end(); iter = std::next(iter))
+            for (std::vector<erppm::RobotBase*>::iterator iter = robotsInCurrentRun_predator.begin(); iter != robotsInCurrentRun_predator.end(); iter = std::next(iter))
             {
-                (*iter)->collide(robotsInCurrentRun, walls, floor);
+                (*iter)->collide(robotsInCurrentRun_predator, walls, floor);
+                (*iter)->updateSensorsPosition();
+            }
+            for (std::vector<erppm::RobotBase*>::iterator iter = robotsInCurrentRun_prey.begin(); iter != robotsInCurrentRun_prey.end(); iter = std::next(iter))
+            {
+                (*iter)->collide(robotsInCurrentRun_prey, walls, floor);
                 (*iter)->updateSensorsPosition();
             }
             if constexpr ( OPEN_WINDOW )
@@ -99,30 +106,75 @@ void erppm::sim::runRobot
                 erppm::win::run();
                 if (!erppm::win::isAlive()) return;
             }
-            if constexpr (DISAPPEAR_TARGET)
+            if (stepNumber == 0)
             {
-                if (!targetGone)
+                if constexpr (PREDATOR_LEARNING_MODE != 0)
                 {
-                    robotsInCurrentRun = {&predatorRobot};
-                    targetGone = true;
+                    if (preyPositionAngle_predator == glm::pi<float>() && predatorRobot.network.getOutput()[0] > predatorRobot.network.getOutput()[1])
+                    {
+                        preyPositionAngle_predator = -preyPositionAngle_predator;          
+                    } 
+                }
+                if constexpr (PREY_LEARNING_MODE != 0)
+                {
+                    if (preyPositionAngle_prey == glm::pi<float>() && preyRobot.network.getOutput()[0] < preyRobot.network.getOutput()[1])
+                    {
+                        preyPositionAngle_prey = -preyPositionAngle_prey;          
+                    } 
+                }
+
+            }
+            if constexpr (TARGET_DISAPPEAR)
+            {
+                if (stepNumber == 1)
+                {
+                    lastOutput_predator[0] = predatorRobot.network.getOutput()[0];
+                    lastOutput_predator[1] = predatorRobot.network.getOutput()[1];
+                    lastOutput_prey[0] = preyRobot.network.getOutput()[0];
+                    lastOutput_prey[1] = preyRobot.network.getOutput()[1];
+                }
+                else if (stepNumber == 2)
+                {
+                    robotsInCurrentRun_predator = {&predatorRobot};
+                    robotsInCurrentRun_prey = {&preyRobot};
                 }
             }
         }
         if constexpr (PREDATOR_LEARNING_MODE != 0 && !OPEN_WINDOW)
         {
             double runError = 0;
-            if constexpr (!DISAPPEAR_TARGET)
+            if constexpr (!TARGET_DISAPPEAR)
             {
                 runError += stepNumber;
                 runError += (preyCaught ? 0.0 : glm::length(predatorRobot.getPosition() - preyRobot.getPosition()) /*/ preyPositionRadius*/);
+                // runError += glm::pi<float>() - abs(glm::mod(abs(predatorRobot.getRotation()[2] - preyPositionAngle_predator), glm::two_pi<float>()) - glm::pi<float>());
+                runError += abs(predatorRobot.getRotation()[2] - preyPositionAngle_predator);
             }
-            // double rotationDiff = glm::pi<float>() - abs(glm::modf(abs(predatorRobot.getRotation()[2] - preyPositionAngle), glm::two_pi<float>()) - glm::pi<float>());
-            runError += abs(predatorRobot.getRotation()[2] - preyPositionAngle);
+            else
+            {
+                // runError += abs(lastOutput_predator[0] - predatorRobot.network.getOutput()[0]) + abs(lastOutput_predator[1] - predatorRobot.network.getOutput()[1]);
+                // runError += glm::pi<float>() - abs(glm::mod(abs(predatorRobot.getRotation()[2] - preyPositionAngle_predator), glm::two_pi<float>()) - glm::pi<float>());
+                runError += abs(predatorRobot.getRotation()[2] - preyPositionAngle_predator);
+            }
             predatorRobot.network.score += runError;
         }
         if constexpr (PREY_LEARNING_MODE != 0 && !OPEN_WINDOW)
         {
-            preyRobot.network.score = (preyCaught ? 0.0 : glm::length(predatorRobot.getPosition() - preyRobot.getPosition()) /*/ preyPositionRadius*/) + stepNumber;
+            double runError = 0;
+            if constexpr (!TARGET_DISAPPEAR)
+            {
+                // runError += stepNumber;
+                runError += (preyCaught ? -1.0 : glm::length(predatorRobot.getPosition() - preyRobot.getPosition()) /*/ preyPositionRadius*/);
+                // runError += glm::pi<float>() - abs(glm::mod(abs(preyRobot.getRotation()[2] - preyPositionAngle_prey), glm::two_pi<float>()) - glm::pi<float>());
+                // runError += abs(preyRobot.getRotation()[2] - preyPositionAngle_prey);
+            }
+            else
+            {
+                runError += abs(lastOutput_prey[0] - preyRobot.network.getOutput()[0]) + abs(lastOutput_prey[1] - preyRobot.network.getOutput()[1]);
+                runError += abs(glm::mod(abs(preyRobot.getRotation()[2] - preyPositionAngle_prey), glm::two_pi<float>()) - glm::pi<float>());
+                // runError += abs(preyRobot.getRotation()[2] - preyPositionAngle_prey);
+            }
+            preyRobot.network.score += runError;
         }
     }
 }
@@ -133,7 +185,8 @@ template <
     bool OPEN_WINDOW,
     int PREDATOR_LEARNING_MODE,
     int PREY_LEARNING_MODE,
-    bool PLACE_ON_LASER_SENORS
+    bool PLACE_ON_LASER_SENORS,
+    bool TARGET_DISAPPEAR
 >
 void erppm::sim::loop(unsigned int sensorsCount)
 {
@@ -167,7 +220,8 @@ void erppm::sim::loop(unsigned int sensorsCount)
                     OPEN_WINDOW,
                     PREDATOR_LEARNING_MODE,
                     PREY_LEARNING_MODE,
-                    PLACE_ON_LASER_SENORS
+                    PLACE_ON_LASER_SENORS,
+                    TARGET_DISAPPEAR
                 >(0, preyPositionAngle);
             }
             else 
@@ -183,7 +237,8 @@ void erppm::sim::loop(unsigned int sensorsCount)
                             OPEN_WINDOW,
                             PREDATOR_LEARNING_MODE,
                             PREY_LEARNING_MODE,
-                            PLACE_ON_LASER_SENORS
+                            PLACE_ON_LASER_SENORS,
+                            TARGET_DISAPPEAR
                         >,
                         this,
                         threadId,
@@ -201,7 +256,7 @@ void erppm::sim::loop(unsigned int sensorsCount)
         {
             if constexpr (PREDATOR_LEARNING_MODE != 0)
             {
-                erppm::env::get().robots.sortBase(erppm::EObjectTypePredator);
+                erppm::env::get().robots.sortBaseIncremental(erppm::EObjectTypePredator);
                 std::cout << "PREDATOR : " 
                     << "generation " << generationNumber 
                     << ":\tpopulationError " << std::accumulate(predatorRobots.begin(), predatorRobots.end(), 0.0, [](double s, const erppm::RobotBase* a)
@@ -235,7 +290,7 @@ void erppm::sim::loop(unsigned int sensorsCount)
 
             if constexpr (PREY_LEARNING_MODE != 0)
             {
-                erppm::env::get().robots.sortBase(erppm::EObjectTypePrey); // TODO reverse?
+                erppm::env::get().robots.sortBaseDecremental(erppm::EObjectTypePrey); // TODO reverse?
                 std::cout << "PREY : " 
                     << "generation " << generationNumber 
                     << ":\tpopulationError " << std::accumulate(preyRobots.begin(), preyRobots.end(), 0.0, [](double s, const erppm::RobotBase* a)
@@ -248,9 +303,15 @@ void erppm::sim::loop(unsigned int sensorsCount)
             }
             if constexpr (PREY_LEARNING_MODE == 2)
             {
-                preyRobots[5]->network.evolveFrom((preyRobots[0]->network),(preyRobots[1]->network));
-                preyRobots[4]->network.evolveFrom((preyRobots[0]->network),(preyRobots[2]->network));
-                preyRobots[3]->network.evolveFrom((preyRobots[1]->network),(preyRobots[2]->network));
+                unsigned int eliminated_index = erppm::cfg::numberOfSurvivingRobots;
+                for(int i = 0; i < erppm::cfg::numberOfSurvivingRobots; i++)
+                {
+                    for(int j = i+1; j < erppm::cfg::numberOfSurvivingRobots; j++)
+                    {
+                        preyRobots[eliminated_index]->network.evolveFrom((preyRobots[i]->network),(preyRobots[j]->network));
+                        eliminated_index++;
+                    }
+                }
             }
             else if(PREY_LEARNING_MODE == 3)
             {
@@ -267,7 +328,8 @@ void erppm::sim::loopTemplateSwitching
     bool OPEN_WINDOW,
     int PREDATOR_LEARNING_MODE,
     int PREY_LEARNING_MODE,
-    int PLACE_ON_LASER_SENORS
+    int PLACE_ON_LASER_SENORS,
+    bool TARGET_DISAPPEAR
 )
 {
     #define GEN_SELECT() \
@@ -290,12 +352,16 @@ void erppm::sim::loopTemplateSwitching
         else { throw; }
 
     #define SELECT_PLACE_LASER(...) \
-        if     (PLACE_ON_LASER_SENORS ==-1) {EXEC(__VA_ARGS__, true)} \
-        else if(PLACE_ON_LASER_SENORS == 0) {EXEC(__VA_ARGS__, false)} \
-        else                                {EXEC(__VA_ARGS__, true)}
+        if     (PLACE_ON_LASER_SENORS ==-1) {SELECT_TARGET_DISAPPEAR(__VA_ARGS__, true)} \
+        else if(PLACE_ON_LASER_SENORS == 0) {SELECT_TARGET_DISAPPEAR(__VA_ARGS__, false)} \
+        else                                {SELECT_TARGET_DISAPPEAR(__VA_ARGS__, true)}
 
-    #define EXEC(v1, v2, v3, v4) \
-        erppm::sim::loop<v1, v2, v3, v4>(PLACE_ON_LASER_SENORS);
+    #define SELECT_TARGET_DISAPPEAR(...) \
+        if     (TARGET_DISAPPEAR) {EXEC(__VA_ARGS__, true)} \
+        else                      {EXEC(__VA_ARGS__, false)} \
+
+    #define EXEC(v1, v2, v3, v4, v5) \
+        erppm::sim::loop<v1, v2, v3, v4, v5>(PLACE_ON_LASER_SENORS);
 
     SELECT_WINDOW();
     

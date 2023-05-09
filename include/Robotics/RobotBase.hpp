@@ -14,6 +14,7 @@
 #include "Drawables/Floor.hpp"
 #include "Drawables/Wall.hpp"
 #include "JimmyNeuron/Jimmy.hpp"
+#include "JimmyNeuron/Experimental/LameNetwork/LameNetwork.hpp"
 
 
 namespace erppm
@@ -22,7 +23,8 @@ namespace erppm
     {
     public:
         oglu::Mesh body;
-        Jimmy::LoopingNet network;
+        // Jimmy::LoopingNet network;
+        Jimmy::E::LameNetwork network;
         glm::dvec2 velocity;
         double angularVelocity;
         EObjectType type;

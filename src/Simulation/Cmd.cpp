@@ -56,6 +56,14 @@ void erppm::cmd::executeCommand(const erppm::Command& command)
     {
         exe_cmd(command);
     }
+    else if (command[0] == "stage" || command[0] == "s")
+    {
+        stage_cmd(command);
+    }
+    else if (command[0] == "view" || command[0] == "v")
+    {
+        view_cmd(command);
+    }
     else if (command[0] == "save")
     {
         saveModel_cmd(command);
@@ -72,17 +80,13 @@ void erppm::cmd::executeCommand(const erppm::Command& command)
     {
         exit_cmd(command);
     }
+    else if (command[0] == "set")
+    {
+        setVar_cmd(command);
+    }
     else if (command[0] == "help")
     {
         help_cmd(command);
-    }
-    else if (command[0] == "magic")
-    {
-        const std::vector<erppm::RobotBase*>& predatorRobots = erppm::env::get().robots.getBase(erppm::EObjectTypePredator);
-        for(int i = 0; i < predatorRobots.size(); i++)
-        {
-            predatorRobots[i]->network.setOutput(0.5);
-        } 
     }
     else
     {
@@ -107,8 +111,8 @@ void erppm::cmd::echo_cmd(const erppm::Command& command)
 
 void erppm::cmd::run_cmd(const erppm::Command& command)
 {
-    if (command.size() != 4){
-        // TODO wrongParms_cmd(command)
+    if (command.size() != 8){
+        wrongParms_cmd(command);
         return;
     }
     bool openWindow = (atoi(command[1].c_str()) == 1);
@@ -117,46 +121,149 @@ void erppm::cmd::run_cmd(const erppm::Command& command)
         erppm::win::open();
     }
     erppm::sim::get().numberOfGenerations = atoi(command[2].c_str());
-    erppm::sim::get().numberOfStepsPerGeneration = atoi(command[3].c_str());
-    erppm::sim::get().stepDuration = 0.1;
+    if (command[3][command[3].size()-1] == 's') 
+    {
+        std::string amount = command[3].substr(0, command[3][command[3].size()-1]);
+        float seconds = atof(amount.c_str());
+        erppm::sim::get().numberOfStepsPerGeneration = (unsigned int) seconds/erppm::sim::get().stepDuration;
+    }
+    else
+    {
+        erppm::sim::get().numberOfStepsPerGeneration = atoi(command[3].c_str());
+    }
+    if (erppm::sim::get().stepDuration == 0)
+    {
+        erppm::sim::get().stepDuration = 0.01;
+    }
     erppm::env::get().useScenario_empty();
     oglu::DrawableRegistry::reinitialize();
     erppm::sim::get().loopTemplateSwitching
     (
         openWindow,
-        2,
-        0,
-        -1
+        atoi(command[4].c_str()),
+        atoi(command[5].c_str()),
+        atoi(command[6].c_str()),
+        command[7] == "1"
     );
     erppm::win::destroy();
-}
-
-void erppm::cmd::stage_cmd(const erppm::Command& command)
-{
-    
 }
 
 void erppm::cmd::exe_cmd(const erppm::Command& command)
 {
     if (command.size() != 2)
     {
-        // TODO wrongParms_cmd(command)
+        wrongParms_cmd(command);
         return;
     }
     std::filesystem::path filePath = std::filesystem::path()/"res"/"exe"/command[1];
     std::ifstream file(filePath);
-    std::string line;
-    while (std::getline(file, line))
+    if (file.is_open()){
+        std::string line;
+        while (std::getline(file, line))
+        {
+            executeCommand(lineToCommand(line));
+        }
+    }
+    else
     {
-        executeCommand(lineToCommand(line));
+        std::cout << "Can't open the \"" << filePath << "\" file.\n";
+    }
+    file.close();
+}
+
+void erppm::cmd::stage_cmd(const erppm::Command& command)
+{
+    if (command.size() != 4){
+        wrongParms_cmd(command);
+        return;
+    }
+    // PREDATOR 
+    if (command[1] == "0")
+    {
+        run_cmd({"run", "0", command[2], command[3], "2", "0", "-1", "1"});
+    }
+    else if (command[1] == "1")
+    {
+        run_cmd({"run", "0", command[2], command[3], "2", "0", "-1", "0"});
+    }
+    else if (command[1] == "2")
+    {
+        run_cmd({"run", "0", command[2], command[3], "2", "0", "0", "0"});
+    }
+    // PREY
+    else if (command[1] == "3")
+    {
+        run_cmd({"run", "0", command[2], command[3], "0", "2", "-1", "1"});
+    }
+    else if (command[1] == "4")
+    {
+        run_cmd({"run", "0", command[2], command[3], "0", "2", "-1", "0"});
+    }
+    else if (command[1] == "5")
+    {
+        run_cmd({"run", "0", command[2], command[3], "0", "2", "0", "0"});
+    }
+    else if (command[1] == "6")
+    {
+        run_cmd({"run", "0", command[2], command[3], "1", "2", "0", "0"});
+    }
+    // ALL
+    else if (command[1] == "7")
+    {
+        run_cmd({"run", "0", command[2], command[3], "2", "2", "0", "0"});
+    }
+
+}
+
+void erppm::cmd::view_cmd(const erppm::Command& command)
+{
+    if (command.size() != 3){
+        wrongParms_cmd(command);
+        return;
+    }
+    // PREDATOR 
+    if (command[1] == "0")
+    {
+        run_cmd({"run", "1", "1", command[2], "2", "0", "-1", "1"});
+    }
+    else if (command[1] == "1")
+    {
+        run_cmd({"run", "1", "1", command[2], "2", "0", "-1", "0"});
+    }
+    else if (command[1] == "2")
+    {
+        run_cmd({"run", "1", "1", command[2], "2", "0", "0", "0"});
+    }
+    // PREY
+    else if (command[1] == "3")
+    {
+        run_cmd({"run", "1", "1", command[2], "0", "2", "-1", "1"});
+    }
+    else if (command[1] == "4")
+    {
+        run_cmd({"run", "1", "1", command[2], "0", "2", "-1", "0"});
+    }
+    else if (command[1] == "5")
+    {
+        run_cmd({"run", "1", "1", command[2], "0", "2", "0", "0"});
+    }
+    else if (command[1] == "6")
+    {
+        run_cmd({"run", "1", "1", command[2], "1", "2", "0", "0"});
+    }
+    // ALL
+    else if (command[1] == "7")
+    {
+        run_cmd({"run", "1", "1", command[2], "2", "2", "0", "0"});
     }
 }
 
 void erppm::cmd::saveModel_cmd(const erppm::Command& command)
 {
-    if (command.size() != 2)
+    bool yes = (command.size() == 3 && command[2] == "yes");
+    if (command.size() != 2 && !yes)
     {
-        // TODO wrongParms_cmd(command)
+        wrongParms_cmd(command);
         return;
     }
     std::string fileName = command[1];
@@ -166,7 +273,8 @@ void erppm::cmd::saveModel_cmd(const erppm::Command& command)
         std::cout << fileDirectory << "\n";
         std::filesystem::create_directories(fileDirectory);
     }
-    else{    
+    else if (!yes)
+    {    
         erppm::Command confirm = {};
         while(confirm.size() != 1 || !(confirm[0] == "y" || confirm[0] == "yes"))
         {
@@ -196,7 +304,7 @@ void erppm::cmd::loadModel_cmd(const erppm::Command& command)
 {
     if (command.size() != 2)
     {
-        // TODO wrongParms_cmd(command)
+        wrongParms_cmd(command);
         return;
     }
     std::string fileName = command[1];
@@ -222,7 +330,7 @@ void erppm::cmd::resetModel_cmd(const erppm::Command& command)
 {
     if (command.size() != 1)
     {
-        // TODO wrongParms_cmd(command)
+        wrongParms_cmd(command);
         return;
     }
     const std::vector<erppm::RobotBase*>& predatorRobots = erppm::env::get().robots.getBase(erppm::EObjectTypePredator);
@@ -243,6 +351,30 @@ void erppm::cmd::exit_cmd(const erppm::Command& command)
     erppm::cmd::isRunningFlag = false;
 }
 
+void erppm::cmd::setVar_cmd(const erppm::Command& command)
+{
+    if (command.size() != 3)
+    {
+        wrongParms_cmd(command);
+        return;
+    }
+    if (command[1] == "susc")
+    {
+        for (auto& robot : erppm::env::get().robots.getRound(erppm::EObjectTypePredator)) robot->network.susceptibilityToMutations = atof(command[2].c_str());
+        for (auto& robot : erppm::env::get().robots.getRound(erppm::EObjectTypePrey)) robot->network.susceptibilityToMutations = atof(command[2].c_str());
+    }
+    else if (command[1] == "sdur")
+    {
+        erppm::sim::get().stepDuration = atof(command[2].c_str());
+        std::cout << "sdur=" << erppm::sim::get().stepDuration <<  "\n";
+    }
+    else
+    {
+        std::cout << "Variable \"" << command[1] <<  "\" not found.\n";
+        return;
+    }
+}
+
 void erppm::cmd::help_cmd(const erppm::Command& command)
 {
     std::cout <<
@@ -259,6 +391,12 @@ void erppm::cmd::undefined_cmd(const erppm::Command& command)
     std::cout << "Undefined command \"" << command[0] << "\"\n";
 }
 
+void erppm::cmd::wrongParms_cmd(const erppm::Command& command)
+{
+    std::cout << "Wrong \"" << command[0] <<  "\" command parameters : ";
+    echo_cmd(command);
+}
+
 erppm::Command erppm::cmd::lineToCommand(const std::string& commandLine)
 {
     erppm::Command command;
@@ -266,6 +404,10 @@ erppm::Command erppm::cmd::lineToCommand(const std::string& commandLine)
     std::string word;
     while(iss >> word)
     {
+        if (word == "#")
+        {
+            return command;
+        }
         command.push_back(word);
     }
     return command;

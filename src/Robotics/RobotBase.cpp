@@ -9,7 +9,7 @@
 
 erppm::RobotBase::RobotBase(const std::filesystem::path& modePlath)
 : body(modePlath)
-, network(0,0,0,0,Jimmy::Methods::transFuncs::tanh,0.001)
+, network(0,0,0,0,Jimmy::Methods::transFuncs::tanh, 0.1)
 , velocity(0,0)
 , angularVelocity(0)
 , type(EObjectTypeNone)

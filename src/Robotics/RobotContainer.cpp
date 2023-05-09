@@ -39,7 +39,7 @@ void erppm::RobotContainer::sortRound(const erppm::EObjectType type)
     }
 }
 
-void erppm::RobotContainer::sortBase(const erppm::EObjectType type)
+void erppm::RobotContainer::sortBaseIncremental(const erppm::EObjectType type)
 {
     switch(type)
     {
@@ -72,6 +72,38 @@ void erppm::RobotContainer::sortBase(const erppm::EObjectType type)
     }
 }
 
+void erppm::RobotContainer::sortBaseDecremental(const erppm::EObjectType type)
+{
+    switch(type)
+    {
+    case erppm::EObjectTypePredator:
+        std::sort
+        (
+            predatorRobots.robots.begin(),
+            predatorRobots.robots.end(),
+            [](const erppm::RobotBase* a, const erppm::RobotBase* b){return a->network.score > b->network.score;}
+        );
+        break;
+    case erppm::EObjectTypePrey:
+        std::sort
+        (
+            preyRobots.robots.begin(),
+            preyRobots.robots.end(),
+            [](const erppm::RobotBase* a, const erppm::RobotBase* b){return a->network.score > b->network.score;}
+        );
+        break;
+    case erppm::EObjectTypeNone:
+        std::sort
+        (
+            allRobots.begin(),
+            allRobots.end(),
+            [](const erppm::RobotBase* a, const erppm::RobotBase* b){return a->network.score > b->network.score;}
+        );
+        break;
+    default:
+        throw;
+    }
+}
 
 void erppm::RobotContainer::reserveRound(const size_t capacity, const erppm::EObjectType type)
 {

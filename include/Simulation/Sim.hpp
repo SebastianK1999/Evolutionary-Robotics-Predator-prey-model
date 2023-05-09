@@ -40,7 +40,8 @@ namespace erppm
             bool OPEN_WINDOW,
             int PREDATOR_LEARNING_MODE,
             int PREY_LEARNING_MODE,
-            bool PLACE_ON_LASER_SENORS
+            bool PLACE_ON_LASER_SENORS,
+            bool TARGET_DISAPPEAR
         >
         inline void runRobot
         (
@@ -52,7 +53,8 @@ namespace erppm
             bool OPEN_WINDOW,
             int PREDATOR_LEARNING_MODE,
             int PREY_LEARNING_MODE,
-            bool PLACE_ON_LASER_SENORS
+            bool PLACE_ON_LASER_SENORS,
+            bool TARGET_DISAPPEAR
         >
         void loop
         (
@@ -64,7 +66,8 @@ namespace erppm
             bool OPEN_WINDOW,
             int PREDATOR_LEARNING_MODE,
             int PREY_LEARNING_MODE,
-            int PLACE_ON_LASER_SENORS
+            int PLACE_ON_LASER_SENORS,
+            bool TARGET_DISAPPEAR
         );
 
     protected:

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <vector>
+#include <unordered_map>
+#include <string>
 #include <list>
 
 #include "Drawables/Floor.hpp"
@@ -21,15 +23,9 @@ namespace erppm
         erppm::Wall wallMinusY;
         erppm::Wall wallPlusX; 
         erppm::Wall wallMinusX;
-        std::vector<erppm::Wall> walls;
+        std::vector<erppm::Wall>* currentWallSet;
+        std::unordered_map<std::string, std::vector<erppm::Wall>> allWallSets;
         erppm::RobotContainer robots;
-        // std::vector<erppm::RobotBase*> robots;
-        // std::vector<erppm::RobotBase*> predatorRobots;
-        // std::vector<erppm::RobotBase*> preyRobots;
-        // template <typename T>
-        // void addRobot(T&& robot);
-        // template <typename T>
-        // std::list<T>& getRobotList();
         void setRobotsCenter(const std::vector<erppm::RobotBase*>& robots);
         void setRobotsCenterSame(const std::vector<erppm::RobotBase*>& robots);
         void setRobotsRandom(const std::vector<erppm::RobotBase*>& robots);
@@ -38,13 +34,18 @@ namespace erppm
         void setRobotsRandomConcentricSame(const std::vector<erppm::RobotBase*>& robots);
         float setRobotsOnLaser(const std::vector<erppm::RobotBase*>& robots, erppm::RobotBase*const referenceRobot, const int laserOnSensor);
         float setRobotsOnLaserSame(const std::vector<erppm::RobotBase*>& robots, erppm::RobotBase*const referenceRobot, const int laserOnSensor);
+        void hideWalls();
+        void showWalls();
         void useScenario_demo();
         void useScenario_empty();
         void useScenario_0();
         void useScenario_1();
+        void setupRobot_demo();
+        void setupRobot_roles();
     
     private:
         void setupField(const float& xSize, const float& ySize);
+        void placeWall(const float x, const float y);
         void initRobots
         (
             const erppm::EObjectType robotType,

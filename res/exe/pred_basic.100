@@ -1,0 +1,7 @@
+echo starting pred_basic
+set sdur 0.01
+
+exe pred_basic
+
+echo done
+save lame_pred_basic.100 yes
