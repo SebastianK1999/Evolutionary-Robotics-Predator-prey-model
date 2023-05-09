@@ -137,6 +137,7 @@ void erppm::cmd::run_cmd(const erppm::Command& command)
     }
     erppm::env::get().useScenario_empty();
     oglu::DrawableRegistry::reinitialize();
+    erppm::sim::get().numberOfRepetitions = 25;
     erppm::sim::get().loopTemplateSwitching
     (
         openWindow,

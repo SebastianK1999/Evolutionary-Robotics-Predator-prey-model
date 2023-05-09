@@ -35,6 +35,8 @@ namespace erppm
         double stepDuration;
         unsigned int numberOfGenerations;
         unsigned int numberOfStepsPerGeneration;
+        unsigned int numberOfRepetitions;
+        bool randomEnv;
         
         template <
             bool OPEN_WINDOW,

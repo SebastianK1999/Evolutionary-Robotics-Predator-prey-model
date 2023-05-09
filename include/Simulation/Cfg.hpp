@@ -12,7 +12,7 @@ namespace erppm
         constexpr size_t numberOfHiddenNeurons = 20;
         constexpr size_t numberOfMemoryNeurons = 20;
 
-        constexpr size_t numberOfSurvivingRobots = 2;
+        constexpr size_t numberOfSurvivingRobots = 20;
         constexpr size_t numberOfEliminatedRobots = (numberOfSurvivingRobots)*(numberOfSurvivingRobots-1)/2;
         constexpr size_t numberOfRobots = numberOfSurvivingRobots + numberOfEliminatedRobots;
 
