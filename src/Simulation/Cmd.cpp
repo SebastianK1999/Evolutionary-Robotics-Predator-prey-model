@@ -111,7 +111,7 @@ void erppm::cmd::echo_cmd(const erppm::Command& command)
 
 void erppm::cmd::run_cmd(const erppm::Command& command)
 {
-    if (command.size() != 8){
+    if (command.size() != 9){
         wrongParms_cmd(command);
         return;
     }
@@ -138,6 +138,7 @@ void erppm::cmd::run_cmd(const erppm::Command& command)
     erppm::env::get().useScenario_empty();
     oglu::DrawableRegistry::reinitialize();
     erppm::sim::get().numberOfRepetitions = 25;
+    erppm::sim::get().randomEnv = (atoi(command[8].c_str()) != 0); 
     erppm::sim::get().loopTemplateSwitching
     (
         openWindow,
@@ -181,37 +182,41 @@ void erppm::cmd::stage_cmd(const erppm::Command& command)
     // PREDATOR 
     if (command[1] == "0")
     {
-        run_cmd({"run", "0", command[2], command[3], "2", "0", "-1", "1"});
+        run_cmd({"run", "0", command[2], command[3], "2", "0", "-1", "1", "0"});
     }
     else if (command[1] == "1")
     {
-        run_cmd({"run", "0", command[2], command[3], "2", "0", "-1", "0"});
+        run_cmd({"run", "0", command[2], command[3], "2", "0", "-1", "0", "0"});
     }
     else if (command[1] == "2")
     {
-        run_cmd({"run", "0", command[2], command[3], "2", "0", "0", "0"});
+        run_cmd({"run", "0", command[2], command[3], "2", "0", "0", "0", "0"});
     }
     // PREY
     else if (command[1] == "3")
     {
-        run_cmd({"run", "0", command[2], command[3], "0", "2", "-1", "1"});
+        run_cmd({"run", "0", command[2], command[3], "0", "2", "-1", "1", "0"});
     }
     else if (command[1] == "4")
     {
-        run_cmd({"run", "0", command[2], command[3], "0", "2", "-1", "0"});
+        run_cmd({"run", "0", command[2], command[3], "0", "2", "-1", "0", "0"});
     }
     else if (command[1] == "5")
     {
-        run_cmd({"run", "0", command[2], command[3], "0", "2", "0", "0"});
+        run_cmd({"run", "0", command[2], command[3], "0", "2", "0", "0", "0"});
     }
     else if (command[1] == "6")
     {
-        run_cmd({"run", "0", command[2], command[3], "1", "2", "0", "0"});
+        run_cmd({"run", "0", command[2], command[3], "1", "2", "0", "0", "0"});
     }
     // ALL
     else if (command[1] == "7")
     {
-        run_cmd({"run", "0", command[2], command[3], "2", "2", "0", "0"});
+        run_cmd({"run", "0", command[2], command[3], "2", "2", "0", "0", "0"});
+    }
+    else if (command[1] == "8")
+    {
+        run_cmd({"run", "0", command[2], command[3], "2", "2", "0", "0", "1"});
     }
 
 }
@@ -225,37 +230,41 @@ void erppm::cmd::view_cmd(const erppm::Command& command)
     // PREDATOR 
     if (command[1] == "0")
     {
-        run_cmd({"run", "1", "1", command[2], "2", "0", "-1", "1"});
+        run_cmd({"run", "1", "1", command[2], "2", "0", "-1", "1", "0"});
     }
     else if (command[1] == "1")
     {
-        run_cmd({"run", "1", "1", command[2], "2", "0", "-1", "0"});
+        run_cmd({"run", "1", "1", command[2], "2", "0", "-1", "0", "0"});
     }
     else if (command[1] == "2")
     {
-        run_cmd({"run", "1", "1", command[2], "2", "0", "0", "0"});
+        run_cmd({"run", "1", "1", command[2], "2", "0", "0", "0", "0"});
     }
     // PREY
     else if (command[1] == "3")
     {
-        run_cmd({"run", "1", "1", command[2], "0", "2", "-1", "1"});
+        run_cmd({"run", "1", "1", command[2], "0", "2", "-1", "1", "0"});
     }
     else if (command[1] == "4")
     {
-        run_cmd({"run", "1", "1", command[2], "0", "2", "-1", "0"});
+        run_cmd({"run", "1", "1", command[2], "0", "2", "-1", "0", "0"});
     }
     else if (command[1] == "5")
     {
-        run_cmd({"run", "1", "1", command[2], "0", "2", "0", "0"});
+        run_cmd({"run", "1", "1", command[2], "0", "2", "0", "0", "0"});
     }
     else if (command[1] == "6")
     {
-        run_cmd({"run", "1", "1", command[2], "1", "2", "0", "0"});
+        run_cmd({"run", "1", "1", command[2], "1", "2", "0", "0", "0"});
     }
     // ALL
     else if (command[1] == "7")
     {
-        run_cmd({"run", "1", "1", command[2], "2", "2", "0", "0"});
+        run_cmd({"run", "1", "1", command[2], "2", "2", "0", "0", "0"});
+    }
+    else if (command[1] == "8")
+    {
+        run_cmd({"run", "1", "1", command[2], "2", "2", "0", "0", "1"});
     }
 }
 

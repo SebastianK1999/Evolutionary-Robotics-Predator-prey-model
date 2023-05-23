@@ -35,146 +35,394 @@ void erppm::sim::runRobot
     float preyPositionAngle
 )
 {
-    float preyPositionAngle_predator = preyPositionAngle;
-    float preyPositionAngle_prey = preyPositionAngle;
-    
-    const std::vector<erppm::RobotBase*>& predatorRobots = erppm::env::get().robots.getBase(erppm::EObjectTypePredator);
-    const std::vector<erppm::RobotBase*>& preyRobots = erppm::env::get().robots.getBase(erppm::EObjectTypePrey);
+    constexpr bool IS_TOURNAMENT = PREDATOR_LEARNING_MODE >=1 && PREY_LEARNING_MODE >= 1;
+    constexpr bool PREDATOR_IS_PRIMARY = PREDATOR_LEARNING_MODE > PREY_LEARNING_MODE;
+
+    const std::vector<erppm::RobotBase*>* primaryRobots;
+    const std::vector<erppm::RobotBase*>* secondaryRobots;
+    if constexpr (PREDATOR_IS_PRIMARY)
+    {
+        primaryRobots = &(erppm::env::get().robots.getBase(erppm::EObjectTypePredator));
+        secondaryRobots = &(erppm::env::get().robots.getBase(erppm::EObjectTypePrey));
+    }
+    else
+    {
+        primaryRobots = &(erppm::env::get().robots.getBase(erppm::EObjectTypePrey));
+        secondaryRobots = &(erppm::env::get().robots.getBase(erppm::EObjectTypePredator));
+    }
     const std::vector<erppm::Wall>& walls = *erppm::env::get().currentWallSet;
     const erppm::Floor& floor = erppm::env::get().floor;
-    
+
     static const unsigned int processor_count = std::thread::hardware_concurrency();
     unsigned int begin; 
     unsigned int end;
     if constexpr (OPEN_WINDOW)
     {
         begin  = 0; 
-        end    = 10;
+        end    = 1;
     }
     else
     {
-        begin  = (unsigned int)( predatorRobots.size() * ((float)threadId / (float)processor_count)); 
-        end    = (unsigned int)( predatorRobots.size() * ((float)(threadId+1) / (float)processor_count));
+        begin  = (unsigned int)( primaryRobots->size() * ((float)threadId / (float)processor_count)); 
+        end    = (unsigned int)( primaryRobots->size() * ((float)(threadId+1) / (float)processor_count));
     }
-    // std::cout << threadId << " : " << begin << " - " << end << "\n";
-
+    auto secondaryNetwork = (*secondaryRobots)[0]->network;
     for (unsigned int robotIndex = begin; robotIndex < end; robotIndex++)
     {
         bool preyCaught = false;
-        erppm::RobotBase& predatorRobot = *(predatorRobots[robotIndex]);
-        erppm::RobotBase& preyRobot = *(preyRobots[robotIndex]);
-        std::vector<erppm::RobotBase*> robotsInCurrentRun_predator = {&predatorRobot, &preyRobot};
-        std::vector<erppm::RobotBase*> robotsInCurrentRun_prey = {&predatorRobot, &preyRobot};
-        predatorRobot.network.clearValues();
-        preyRobot.network.clearValues();
+        erppm::RobotBase& primaryRobot = *(*primaryRobots)[robotIndex];
+        erppm::RobotBase& secondaryRobot = *(*secondaryRobots)[threadId];
+        std::vector<erppm::RobotBase*> robotsInCurrentRun = {&primaryRobot, &secondaryRobot};
+        primaryRobot.network.clearValues();
+        secondaryNetwork.clearValues();
 
-        double lastOutput_predator[2] = {0,0};
-        double lastOutput_prey[2] = {0,0};
+        double lastOutput[2] = {0,0};
         unsigned int stepNumber = 0;
+
         for(; stepNumber< numberOfStepsPerGeneration; stepNumber++)
         {
-            if constexpr (PREDATOR_LEARNING_MODE != 0)
+            primaryRobot.measure(robotsInCurrentRun, walls, floor);
+            primaryRobot.network.run(primaryRobot.getSensorData());
+            primaryRobot.run(stepDuration, primaryRobot.network.getOutput());
+
+            if constexpr (IS_TOURNAMENT)
             {
-                predatorRobot.measure(robotsInCurrentRun_predator, walls, floor);
-                predatorRobot.network.run(predatorRobot.getSensorData());
-                predatorRobot.run(stepDuration, predatorRobot.network.getOutput());
+                secondaryRobot.measure(robotsInCurrentRun, walls, floor);
+                secondaryNetwork.run(secondaryRobot.getSensorData());
+                secondaryRobot.run(stepDuration, secondaryNetwork.getOutput());
             }
-            if constexpr (PREY_LEARNING_MODE != 0)
-            {
-                preyRobot.measure(robotsInCurrentRun_prey, walls, floor);
-                preyRobot.network.run(preyRobot.getSensorData());
-                preyRobot.run(stepDuration, preyRobot.network.getOutput());
-            }
-            if (glm::length(predatorRobot.getPosition() - preyRobot.getPosition()) < 2.0)
+            if (glm::length(primaryRobot.getPosition() - secondaryRobot.getPosition()) <= 2.0)
             {
                 preyCaught = true;
                 break;
             }
-            for (std::vector<erppm::RobotBase*>::iterator iter = robotsInCurrentRun_predator.begin(); iter != robotsInCurrentRun_predator.end(); iter = std::next(iter))
+            for (std::vector<erppm::RobotBase*>::iterator iter = robotsInCurrentRun.begin(); iter != robotsInCurrentRun.end(); iter = std::next(iter))
             {
-                (*iter)->collide(robotsInCurrentRun_predator, walls, floor);
-                (*iter)->updateSensorsPosition();
-            }
-            for (std::vector<erppm::RobotBase*>::iterator iter = robotsInCurrentRun_prey.begin(); iter != robotsInCurrentRun_prey.end(); iter = std::next(iter))
-            {
-                (*iter)->collide(robotsInCurrentRun_prey, walls, floor);
+                (*iter)->collide(robotsInCurrentRun, walls, floor);
                 (*iter)->updateSensorsPosition();
             }
             if constexpr ( OPEN_WINDOW )
             {
-                // std::cout << predatorRobot.network.getOutput().size() << " " << predatorRobot.network.getOutput()[0] << " " << predatorRobot.network.getOutput()[1] << "\r";
                 erppm::win::run();
                 if (!erppm::win::isAlive()) return;
             }
             if (stepNumber == 0)
             {
-                if constexpr (PREDATOR_LEARNING_MODE != 0)
+                if constexpr (PREDATOR_IS_PRIMARY)
                 {
-                    if (preyPositionAngle_predator == glm::pi<float>() && predatorRobot.network.getOutput()[0] > predatorRobot.network.getOutput()[1])
+                    if (preyPositionAngle == glm::pi<float>() && primaryRobot.network.getOutput()[0] > primaryRobot.network.getOutput()[1])
                     {
-                        preyPositionAngle_predator = -preyPositionAngle_predator;          
+                        preyPositionAngle = -preyPositionAngle;          
+                    }
+                }
+                else
+                {
+                    if (preyPositionAngle == glm::pi<float>() && primaryRobot.network.getOutput()[0] < primaryRobot.network.getOutput()[1])
+                    {
+                        preyPositionAngle = -preyPositionAngle;          
                     } 
                 }
-                if constexpr (PREY_LEARNING_MODE != 0)
-                {
-                    if (preyPositionAngle_prey == glm::pi<float>() && preyRobot.network.getOutput()[0] < preyRobot.network.getOutput()[1])
-                    {
-                        preyPositionAngle_prey = -preyPositionAngle_prey;          
-                    } 
-                }
-
             }
             if constexpr (TARGET_DISAPPEAR)
             {
                 if (stepNumber == 1)
                 {
-                    lastOutput_predator[0] = predatorRobot.network.getOutput()[0];
-                    lastOutput_predator[1] = predatorRobot.network.getOutput()[1];
-                    lastOutput_prey[0] = preyRobot.network.getOutput()[0];
-                    lastOutput_prey[1] = preyRobot.network.getOutput()[1];
+                    lastOutput[0] = primaryRobot.network.getOutput()[0];
+                    lastOutput[1] = primaryRobot.network.getOutput()[1];
                 }
                 else if (stepNumber == 2)
                 {
-                    robotsInCurrentRun_predator = {&predatorRobot};
-                    robotsInCurrentRun_prey = {&preyRobot};
+                    robotsInCurrentRun = {&primaryRobot};
                 }
             }
         }
-        if constexpr (PREDATOR_LEARNING_MODE != 0 && !OPEN_WINDOW)
+        if constexpr (!OPEN_WINDOW)
         {
-            double runError = 0;
-            if constexpr (!TARGET_DISAPPEAR)
+            if constexpr (PREDATOR_IS_PRIMARY)
             {
-                runError += stepNumber;
-                runError += (preyCaught ? 0.0 : glm::length(predatorRobot.getPosition() - preyRobot.getPosition()) /*/ preyPositionRadius*/);
-                // runError += glm::pi<float>() - abs(glm::mod(abs(predatorRobot.getRotation()[2] - preyPositionAngle_predator), glm::two_pi<float>()) - glm::pi<float>());
-                runError += abs(predatorRobot.getRotation()[2] - preyPositionAngle_predator);
+                double runError = 0;
+                if constexpr (!TARGET_DISAPPEAR)
+                {
+                    runError += stepNumber;
+                    runError += (preyCaught ? 0.0 : glm::length(primaryRobot.getPosition() - secondaryRobot.getPosition()) /*/ preyPositionRadius*/);
+                    // runError += glm::pi<float>() - abs(glm::mod(abs(primaryRobot.getRotation()[2] - preyPositionAngle), glm::two_pi<float>()) - glm::pi<float>());
+                    if ( !randomEnv ) runError += abs(primaryRobot.getRotation()[2] - preyPositionAngle);
+                }
+                else
+                {
+                    // runError += abs(lastOutput_predator[0] - primaryRobot.network.getOutput()[0]) + abs(lastOutput_predator[1] - primaryRobot.network.getOutput()[1]);
+                    runError += glm::pi<float>() - abs(glm::mod(abs(primaryRobot.getRotation()[2] - preyPositionAngle), glm::two_pi<float>()) - glm::pi<float>());
+                    // runError += abs(primaryRobot.getRotation()[2] - preyPositionAngle);
+                }
+                primaryRobot.network.score += runError;
             }
             else
             {
-                // runError += abs(lastOutput_predator[0] - predatorRobot.network.getOutput()[0]) + abs(lastOutput_predator[1] - predatorRobot.network.getOutput()[1]);
-                // runError += glm::pi<float>() - abs(glm::mod(abs(predatorRobot.getRotation()[2] - preyPositionAngle_predator), glm::two_pi<float>()) - glm::pi<float>());
-                runError += abs(predatorRobot.getRotation()[2] - preyPositionAngle_predator);
+                double runError = 0;
+                if constexpr (!TARGET_DISAPPEAR)
+                {
+                    if ( randomEnv ) runError += stepNumber;
+                    if ( !randomEnv ) runError += (preyCaught ? -1.0 : glm::length(secondaryRobot.getPosition() - primaryRobot.getPosition()) /*/ preyPositionRadius*/);
+                    // runError += glm::pi<float>() - abs(glm::mod(abs(primaryRobot.getRotation()[2] - preyPositionAngle_prey), glm::two_pi<float>()) - glm::pi<float>());
+                    // runError += abs(primaryRobot.getRotation()[2] - preyPositionAngle_prey);
+                }
+                else
+                {
+                    runError += abs(lastOutput[0] - primaryRobot.network.getOutput()[0]) + abs(lastOutput[1] - primaryRobot.network.getOutput()[1]);
+                    runError += abs(glm::mod(abs(primaryRobot.getRotation()[2] - preyPositionAngle), glm::two_pi<float>()) - glm::pi<float>());
+                    // runError += abs(primaryRobot.getRotation()[2] - preyPositionAngle_prey);
+                }
+                primaryRobot.network.score += runError;
             }
-            predatorRobot.network.score += runError;
         }
-        if constexpr (PREY_LEARNING_MODE != 0 && !OPEN_WINDOW)
+    }
+
+
+
+
+
+
+
+    // float preyPositionAngle_predator = preyPositionAngle;
+    // float preyPositionAngle_prey = preyPositionAngle;
+    
+    // const std::vector<erppm::RobotBase*>& predatorRobots = erppm::env::get().robots.getBase(erppm::EObjectTypePredator);
+    // const std::vector<erppm::RobotBase*>& preyRobots = erppm::env::get().robots.getBase(erppm::EObjectTypePrey);
+    // const std::vector<erppm::Wall>& walls = *erppm::env::get().currentWallSet;
+    // const erppm::Floor& floor = erppm::env::get().floor;
+    
+    // static const unsigned int processor_count = std::thread::hardware_concurrency();
+    // unsigned int begin; 
+    // unsigned int end;
+    // if constexpr (OPEN_WINDOW)
+    // {
+    //     begin  = 0; 
+    //     end    = 1;
+    // }
+    // else
+    // {
+    //     begin  = (unsigned int)( predatorRobots.size() * ((float)threadId / (float)processor_count)); 
+    //     end    = (unsigned int)( predatorRobots.size() * ((float)(threadId+1) / (float)processor_count));
+    // }
+    // // std::cout << threadId << " : " << begin << " - " << end << "\n";
+
+    // for (unsigned int robotIndex = begin; robotIndex < end; robotIndex++)
+    // {
+    //     bool preyCaught = false;
+    //     erppm::RobotBase& predatorRobot = *(predatorRobots[robotIndex]);
+    //     erppm::RobotBase& preyRobot = *(preyRobots[robotIndex]);
+    //     std::vector<erppm::RobotBase*> robotsInCurrentRun_predator = {&predatorRobot, &preyRobot};
+    //     std::vector<erppm::RobotBase*> robotsInCurrentRun_prey = {&predatorRobot, &preyRobot};
+    //     predatorRobot.network.clearValues();
+    //     preyRobot.network.clearValues();
+
+    //     double lastOutput_predator[2] = {0,0};
+    //     double lastOutput_prey[2] = {0,0};
+    //     unsigned int stepNumber = 0;
+    //     for(; stepNumber< numberOfStepsPerGeneration; stepNumber++)
+    //     {
+    //         if constexpr (PREDATOR_LEARNING_MODE != 0)
+    //         {
+    //             predatorRobot.measure(robotsInCurrentRun_predator, walls, floor);
+    //             predatorRobot.network.run(predatorRobot.getSensorData());
+    //             predatorRobot.run(stepDuration, predatorRobot.network.getOutput());
+    //         }
+    //         if constexpr (PREY_LEARNING_MODE != 0)
+    //         {
+    //             preyRobot.measure(robotsInCurrentRun_prey, walls, floor);
+    //             preyRobot.network.run(preyRobot.getSensorData());
+    //             preyRobot.run(stepDuration, preyRobot.network.getOutput());
+    //         }
+    //         if (glm::length(predatorRobot.getPosition() - preyRobot.getPosition()) < 2.0)
+    //         {
+    //             preyCaught = true;
+    //             break;
+    //         }
+    //         for (std::vector<erppm::RobotBase*>::iterator iter = robotsInCurrentRun_predator.begin(); iter != robotsInCurrentRun_predator.end(); iter = std::next(iter))
+    //         {
+    //             (*iter)->collide(robotsInCurrentRun_predator, walls, floor);
+    //             (*iter)->updateSensorsPosition();
+    //         }
+    //         for (std::vector<erppm::RobotBase*>::iterator iter = robotsInCurrentRun_prey.begin(); iter != robotsInCurrentRun_prey.end(); iter = std::next(iter))
+    //         {
+    //             (*iter)->collide(robotsInCurrentRun_prey, walls, floor);
+    //             (*iter)->updateSensorsPosition();
+    //         }
+    //         if constexpr ( OPEN_WINDOW )
+    //         {
+    //             // std::cout << predatorRobot.network.getOutput().size() << " " << predatorRobot.network.getOutput()[0] << " " << predatorRobot.network.getOutput()[1] << "\r";
+    //             erppm::win::run();
+    //             if (!erppm::win::isAlive()) return;
+    //         }
+    //         if (stepNumber == 0)
+    //         {
+    //             if constexpr (PREDATOR_LEARNING_MODE != 0)
+    //             {
+    //                 if (preyPositionAngle_predator == glm::pi<float>() && predatorRobot.network.getOutput()[0] > predatorRobot.network.getOutput()[1])
+    //                 {
+    //                     preyPositionAngle_predator = -preyPositionAngle_predator;          
+    //                 } 
+    //             }
+    //             if constexpr (PREY_LEARNING_MODE != 0)
+    //             {
+    //                 if (preyPositionAngle_prey == glm::pi<float>() && preyRobot.network.getOutput()[0] < preyRobot.network.getOutput()[1])
+    //                 {
+    //                     preyPositionAngle_prey = -preyPositionAngle_prey;          
+    //                 } 
+    //             }
+
+    //         }
+    //         if constexpr (TARGET_DISAPPEAR)
+    //         {
+    //             if (stepNumber == 1)
+    //             {
+    //                 lastOutput_predator[0] = predatorRobot.network.getOutput()[0];
+    //                 lastOutput_predator[1] = predatorRobot.network.getOutput()[1];
+    //                 lastOutput_prey[0] = preyRobot.network.getOutput()[0];
+    //                 lastOutput_prey[1] = preyRobot.network.getOutput()[1];
+    //             }
+    //             else if (stepNumber == 2)
+    //             {
+    //                 robotsInCurrentRun_predator = {&predatorRobot};
+    //                 robotsInCurrentRun_prey = {&preyRobot};
+    //             }
+    //         }
+    //     }
+    //     if constexpr (PREDATOR_LEARNING_MODE != 0 && !OPEN_WINDOW)
+    //     {
+    //         double runError = 0;
+    //         if constexpr (!TARGET_DISAPPEAR)
+    //         {
+    //             runError += stepNumber;
+    //             runError += (preyCaught ? 0.0 : glm::length(predatorRobot.getPosition() - preyRobot.getPosition()) /*/ preyPositionRadius*/);
+    //             // runError += glm::pi<float>() - abs(glm::mod(abs(predatorRobot.getRotation()[2] - preyPositionAngle_predator), glm::two_pi<float>()) - glm::pi<float>());
+    //             runError += abs(predatorRobot.getRotation()[2] - preyPositionAngle_predator);
+    //         }
+    //         else
+    //         {
+    //             // runError += abs(lastOutput_predator[0] - predatorRobot.network.getOutput()[0]) + abs(lastOutput_predator[1] - predatorRobot.network.getOutput()[1]);
+    //             runError += glm::pi<float>() - abs(glm::mod(abs(predatorRobot.getRotation()[2] - preyPositionAngle_predator), glm::two_pi<float>()) - glm::pi<float>());
+    //             // runError += abs(predatorRobot.getRotation()[2] - preyPositionAngle_predator);
+    //         }
+    //         predatorRobot.network.score += runError;
+    //     }
+    //     if constexpr (PREY_LEARNING_MODE != 0 && !OPEN_WINDOW)
+    //     {
+    //         double runError = 0;
+    //         if constexpr (!TARGET_DISAPPEAR)
+    //         {
+    //             // runError += stepNumber;
+    //             runError += (preyCaught ? -1.0 : glm::length(predatorRobot.getPosition() - preyRobot.getPosition()) /*/ preyPositionRadius*/);
+    //             // runError += glm::pi<float>() - abs(glm::mod(abs(preyRobot.getRotation()[2] - preyPositionAngle_prey), glm::two_pi<float>()) - glm::pi<float>());
+    //             // runError += abs(preyRobot.getRotation()[2] - preyPositionAngle_prey);
+    //         }
+    //         else
+    //         {
+    //             runError += abs(lastOutput_prey[0] - preyRobot.network.getOutput()[0]) + abs(lastOutput_prey[1] - preyRobot.network.getOutput()[1]);
+    //             runError += abs(glm::mod(abs(preyRobot.getRotation()[2] - preyPositionAngle_prey), glm::two_pi<float>()) - glm::pi<float>());
+    //             // runError += abs(preyRobot.getRotation()[2] - preyPositionAngle_prey);
+    //         }
+    //         preyRobot.network.score += runError;
+    //     }
+    // }
+}
+
+
+template <
+    bool OPEN_WINDOW,
+    int PREDATOR_LEARNING_MODE,
+    int PREY_LEARNING_MODE,
+    bool PLACE_ON_LASER_SENORS,
+    bool TARGET_DISAPPEAR
+>
+void erppm::sim::selectThreads(float preyPositionAngle)
+{
+    if constexpr ( OPEN_WINDOW )
+    {
+        erppm::sim::runRobot<
+            OPEN_WINDOW,
+            PREDATOR_LEARNING_MODE,
+            PREY_LEARNING_MODE,
+            PLACE_ON_LASER_SENORS,
+            TARGET_DISAPPEAR
+        >(0, preyPositionAngle);
+    }
+    else if constexpr (PREDATOR_LEARNING_MODE >= 2 && PREDATOR_LEARNING_MODE >= 2)
+    {
+        static const auto processor_count = std::thread::hardware_concurrency();
+        std::vector<std::future<void>> futures(processor_count);
+        for( int threadId = 0; threadId < futures.size(); threadId++ )
         {
-            double runError = 0;
-            if constexpr (!TARGET_DISAPPEAR)
-            {
-                // runError += stepNumber;
-                runError += (preyCaught ? -1.0 : glm::length(predatorRobot.getPosition() - preyRobot.getPosition()) /*/ preyPositionRadius*/);
-                // runError += glm::pi<float>() - abs(glm::mod(abs(preyRobot.getRotation()[2] - preyPositionAngle_prey), glm::two_pi<float>()) - glm::pi<float>());
-                // runError += abs(preyRobot.getRotation()[2] - preyPositionAngle_prey);
-            }
-            else
-            {
-                runError += abs(lastOutput_prey[0] - preyRobot.network.getOutput()[0]) + abs(lastOutput_prey[1] - preyRobot.network.getOutput()[1]);
-                runError += abs(glm::mod(abs(preyRobot.getRotation()[2] - preyPositionAngle_prey), glm::two_pi<float>()) - glm::pi<float>());
-                // runError += abs(preyRobot.getRotation()[2] - preyPositionAngle_prey);
-            }
-            preyRobot.network.score += runError;
+            futures[threadId] = std::async
+            (
+                std::launch::async,
+                &erppm::sim::runRobot<
+                    OPEN_WINDOW,
+                    PREDATOR_LEARNING_MODE,
+                    1,
+                    PLACE_ON_LASER_SENORS,
+                    TARGET_DISAPPEAR
+                >,
+                this,
+                threadId,
+                preyPositionAngle
+            );
+
+        }
+        for( auto& f : futures )
+        {
+            f.get();
+        }
+        // futures.clear();
+        std::vector<std::future<void>> futures2(processor_count);
+        for( int threadId = 0; threadId < futures2.size(); threadId++ )
+        {
+            futures2[threadId] = std::async
+            (
+                std::launch::async,
+                &erppm::sim::runRobot<
+                    OPEN_WINDOW,
+                    1,
+                    PREY_LEARNING_MODE,
+                    PLACE_ON_LASER_SENORS,
+                    TARGET_DISAPPEAR
+                >,
+                this,
+                threadId,
+                preyPositionAngle
+            );
+
+        }
+        for( auto& f : futures2 )
+        {
+            f.get();
+        }
+    }
+    else
+    {
+        static const auto processor_count = std::thread::hardware_concurrency();
+        std::vector<std::future<void>> futures(processor_count);
+        for( int threadId = 0; threadId < futures.size(); threadId++ )
+        {
+            futures[threadId] = std::async
+            (
+                std::launch::async,
+                &erppm::sim::runRobot<
+                    OPEN_WINDOW,
+                    PREDATOR_LEARNING_MODE,
+                    PREY_LEARNING_MODE,
+                    PLACE_ON_LASER_SENORS,
+                    TARGET_DISAPPEAR
+                >,
+                this,
+                threadId,
+                preyPositionAngle
+            );
+
+        }
+        for( auto& f : futures )
+        {
+            f.get();
         }
     }
 }
@@ -198,63 +446,44 @@ void erppm::sim::loop(unsigned int sensorsCount)
     {
         resetScore(predatorRobots);
         resetScore(preyRobots);
-        for (unsigned int repetition = 0; repetition < 100; repetition++) // need to prepare a
+        for (unsigned int repetition = 0; repetition < numberOfRepetitions; repetition++) // need to prepare a
         { 
-            if constexpr (OPEN_WINDOW){
-                if (!erppm::win::isAlive()) return;
-            }
-            // Prepare generation
             float preyPositionAngle = 0;
-            erppm::env::get().setRobotsCenterSame(predatorRobots);
-            if constexpr (PLACE_ON_LASER_SENORS)
+            if (randomEnv)
             {
-                preyPositionAngle = erppm::env::get().setRobotsOnLaserSame(preyRobots, predatorRobots[0], sensorsCount);
+                erppm::env::get().useScenario_random();
+                erppm::env::get().setRobotsRandomConcentricSame(predatorRobots);
+                erppm::env::get().setRobotsRandomConcentricSame(preyRobots);
             }
             else
             {
-                erppm::env::get().setRobotsRandomConcentricSame(preyRobots);
-            }
-            if constexpr ( OPEN_WINDOW )
-            {
-                erppm::sim::runRobot<
-                    OPEN_WINDOW,
-                    PREDATOR_LEARNING_MODE,
-                    PREY_LEARNING_MODE,
-                    PLACE_ON_LASER_SENORS,
-                    TARGET_DISAPPEAR
-                >(0, preyPositionAngle);
-            }
-            else 
-            {
-                static const auto processor_count = std::thread::hardware_concurrency();
-                std::vector<std::future<void>> futures(processor_count);
-                for( int threadId = 0; threadId < futures.size(); threadId++ )
-                {
-                    futures[threadId] = std::async
-                    (
-                        std::launch::async,
-                        &erppm::sim::runRobot<
-                            OPEN_WINDOW,
-                            PREDATOR_LEARNING_MODE,
-                            PREY_LEARNING_MODE,
-                            PLACE_ON_LASER_SENORS,
-                            TARGET_DISAPPEAR
-                        >,
-                        this,
-                        threadId,
-                        preyPositionAngle
-                    );
-
+                if constexpr (OPEN_WINDOW){
+                    if (!erppm::win::isAlive()) return;
                 }
-                for( auto& f : futures )
+                // Prepare generation
+                preyPositionAngle = 0;
+                erppm::env::get().setRobotsCenterSame(predatorRobots);
+                if constexpr (PLACE_ON_LASER_SENORS)
                 {
-                    f.get();
+                    preyPositionAngle = erppm::env::get().setRobotsOnLaserSame(preyRobots, predatorRobots[0], sensorsCount);
+                }
+                else
+                {
+                    erppm::env::get().setRobotsRandomConcentricSame(preyRobots);
                 }
             }
+            erppm::sim::selectThreads<
+                OPEN_WINDOW,
+                PREDATOR_LEARNING_MODE,
+                PREY_LEARNING_MODE,
+                PLACE_ON_LASER_SENORS,
+                TARGET_DISAPPEAR
+            >(preyPositionAngle);
+            
         }
         if constexpr (!OPEN_WINDOW)
         {
-            if constexpr (PREDATOR_LEARNING_MODE != 0)
+            if constexpr (PREDATOR_LEARNING_MODE >= 2)
             {
                 erppm::env::get().robots.sortBaseIncremental(erppm::EObjectTypePredator);
                 std::cout << "PREDATOR : " 
@@ -288,7 +517,7 @@ void erppm::sim::loop(unsigned int sensorsCount)
                 preyRobots[3]->evolveFrom(*(preyRobots[1]),*(preyRobots[2]));
             }
 
-            if constexpr (PREY_LEARNING_MODE != 0)
+            if constexpr (PREY_LEARNING_MODE >= 2)
             {
                 erppm::env::get().robots.sortBaseDecremental(erppm::EObjectTypePrey); // TODO reverse?
                 std::cout << "PREY : " 

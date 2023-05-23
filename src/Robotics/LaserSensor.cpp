@@ -76,14 +76,14 @@ void erppm::LaserSensor::measure(const std::vector<RobotBase*>& robots, const st
                 if(direction.x / direction.y > directionToCorner.x / directionToCorner.y && directionToCorner.y >= 0){   
                     const float tempDistance = directionToCorner.y / direction.y;
                     const float xDestination = direction.x*tempDistance + body.getPosition().x;
-                    if(xDestination > ((*iter).getPosition().x-(*iter).getScale().x) && xDestination < ((*iter).getPosition().x+(*iter).getScale().x) && tempDistance > -0.5){
+                    if(xDestination > ((*iter).getPosition().x-(*iter).getScale().x) && xDestination < ((*iter).getPosition().x+(*iter).getScale().x) && tempDistance > -1.0){
                         wallsDistance = std::min(wallsDistance,tempDistance);
                     }
                 }
                 else{
                     const float tempDistance = directionToCorner.x / direction.x;
                     const float yDestination = direction.y*tempDistance + body.getPosition().y;
-                    if(yDestination > ((*iter).getPosition().y-(*iter).getScale().y) && yDestination < ((*iter).getPosition().y+(*iter).getScale().y) && tempDistance > -0.5){
+                    if(yDestination > ((*iter).getPosition().y-(*iter).getScale().y) && yDestination < ((*iter).getPosition().y+(*iter).getScale().y) && tempDistance > -1.0){
                         wallsDistance = std::min(wallsDistance,tempDistance);
                     }
                 }
@@ -93,14 +93,14 @@ void erppm::LaserSensor::measure(const std::vector<RobotBase*>& robots, const st
                 if(direction.x / direction.y < directionToCorner.x / directionToCorner.y && directionToCorner.y <= 0){     
                     const float tempDistance = directionToCorner.y / direction.y;
                     const float xDestination = direction.x*tempDistance + body.getPosition().x;
-                    if(xDestination > ((*iter).getPosition().x-(*iter).getScale().x) && xDestination < ((*iter).getPosition().x+(*iter).getScale().x) && tempDistance > -0.5){
+                    if(xDestination > ((*iter).getPosition().x-(*iter).getScale().x) && xDestination < ((*iter).getPosition().x+(*iter).getScale().x) && tempDistance > -1.0){
                         wallsDistance = std::min(wallsDistance,tempDistance);
                     }
                 }
                 else{
                     const float tempDistance = directionToCorner.x / direction.x;
                     const float yDestination = direction.y*tempDistance + body.getPosition().y;
-                    if(yDestination > ((*iter).getPosition().y-(*iter).getScale().y) && yDestination < ((*iter).getPosition().y+(*iter).getScale().y) && tempDistance > -0.5){
+                    if(yDestination > ((*iter).getPosition().y-(*iter).getScale().y) && yDestination < ((*iter).getPosition().y+(*iter).getScale().y) && tempDistance > -1.0){
                         wallsDistance = std::min(wallsDistance,tempDistance);
                     }
                 }
@@ -112,14 +112,14 @@ void erppm::LaserSensor::measure(const std::vector<RobotBase*>& robots, const st
                 if(direction.x / direction.y < directionToCorner.x / directionToCorner.y && directionToCorner.y >= 0){   
                     const float tempDistance = directionToCorner.y / direction.y;
                     const float xDestination = direction.x*tempDistance + body.getPosition().x;
-                    if(xDestination > ((*iter).getPosition().x-(*iter).getScale().x) && xDestination < ((*iter).getPosition().x+(*iter).getScale().x) && tempDistance > -0.5){
+                    if(xDestination > ((*iter).getPosition().x-(*iter).getScale().x) && xDestination < ((*iter).getPosition().x+(*iter).getScale().x) && tempDistance > -1.0){
                         wallsDistance = std::min(wallsDistance,tempDistance);
                     }
                 }
                 else{
                     const float tempDistance = directionToCorner.x / direction.x;
                     const float yDestination = direction.y*tempDistance + body.getPosition().y;
-                    if(yDestination > ((*iter).getPosition().y-(*iter).getScale().y) && yDestination < ((*iter).getPosition().y+(*iter).getScale().y) && tempDistance > -0.5){
+                    if(yDestination > ((*iter).getPosition().y-(*iter).getScale().y) && yDestination < ((*iter).getPosition().y+(*iter).getScale().y) && tempDistance > -1.0){
                         wallsDistance = std::min(wallsDistance,tempDistance);
                     }
                 }
@@ -129,14 +129,14 @@ void erppm::LaserSensor::measure(const std::vector<RobotBase*>& robots, const st
                 if(direction.x / direction.y > directionToCorner.x / directionToCorner.y && directionToCorner.y <= 0){   
                     const float tempDistance = directionToCorner.y / direction.y;
                     const float xDestination = direction.x*tempDistance + body.getPosition().x;
-                    if(xDestination > ((*iter).getPosition().x-(*iter).getScale().x) && xDestination < ((*iter).getPosition().x+(*iter).getScale().x) && tempDistance > -0.5){
+                    if(xDestination > ((*iter).getPosition().x-(*iter).getScale().x) && xDestination < ((*iter).getPosition().x+(*iter).getScale().x) && tempDistance > -1.0){
                         wallsDistance = std::min(wallsDistance,tempDistance);
                     }
                 }
                 else{
                     const float tempDistance = directionToCorner.x / direction.x;
                     const float yDestination = direction.y*tempDistance + body.getPosition().y;
-                    if(yDestination > ((*iter).getPosition().y-(*iter).getScale().y) && yDestination < ((*iter).getPosition().y+(*iter).getScale().y) && tempDistance > -0.5){
+                    if(yDestination > ((*iter).getPosition().y-(*iter).getScale().y) && yDestination < ((*iter).getPosition().y+(*iter).getScale().y) && tempDistance > -1.0){
                         wallsDistance = std::min(wallsDistance,tempDistance);
                     }
                 }

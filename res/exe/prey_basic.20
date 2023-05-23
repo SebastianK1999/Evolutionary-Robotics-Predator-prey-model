@@ -1,0 +1,8 @@
+echo starting prey_basic
+set sdur 0.05
+load lame_pred_basic.20
+
+exe prey_basic
+
+echo done
+save lame_prey_basic.20 yes

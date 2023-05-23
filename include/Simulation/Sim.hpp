@@ -37,6 +37,7 @@ namespace erppm
         unsigned int numberOfStepsPerGeneration;
         unsigned int numberOfRepetitions;
         bool randomEnv;
+        bool survival;
         
         template <
             bool OPEN_WINDOW,
@@ -48,6 +49,18 @@ namespace erppm
         inline void runRobot
         (
             unsigned int threadId,
+            float preyPositionAngle
+        );
+
+        template <
+            bool OPEN_WINDOW,
+            int PREDATOR_LEARNING_MODE,
+            int PREY_LEARNING_MODE,
+            bool PLACE_ON_LASER_SENORS,
+            bool TARGET_DISAPPEAR
+        >
+        void selectThreads
+        (
             float preyPositionAngle
         );
 

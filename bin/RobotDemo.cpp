@@ -73,7 +73,7 @@ MainWindow::MainWindow(const int _width, const int _height, const std::string& _
     glfwSetInputMode(getGlfwWindowPtr(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwPollEvents();
 
-    erppm::env::get().useScenario_demo();
+    erppm::env::get().useScenario_random();
     erppm::env::get().setupRobot_demo();
 
     mainRobotInput.resize(erppm::env::get().robots.getBase()[mainRobotIndex]->getControlInputSize());    
@@ -108,6 +108,18 @@ void MainWindow::mainFunction()
         if(keyTracker.isJustPressed(GLFW_KEY_TAB))
         {
             freeCamera =! freeCamera;
+        }
+        if(keyTracker.isJustReleased(oglu::KeyBundle{GLFW_KEY_LEFT_CONTROL, GLFW_KEY_R}))
+        {
+            erppm::env::get().useScenario_random();
+        }
+        if(keyTracker.isPressed(oglu::KeyBundle{GLFW_KEY_LEFT_CONTROL, GLFW_KEY_UP}))
+        {
+            mainCamera.radius += 0.1;
+        }
+        if(keyTracker.isPressed(oglu::KeyBundle{GLFW_KEY_LEFT_CONTROL, GLFW_KEY_DOWN}))
+        {
+            mainCamera.radius -= 0.1;
         }
         moveObjects();
         collisions();
@@ -262,12 +274,16 @@ int main(int argc, char *argv[])
     window.keyTracker.addKey(GLFW_KEY_TAB);
     window.keyTracker.addKey(GLFW_KEY_ENTER);
     window.keyTracker.addKey(GLFW_KEY_SPACE);
+    window.keyTracker.addKey(GLFW_KEY_LEFT_CONTROL);
     window.keyTracker.addKey(GLFW_KEY_W);
     window.keyTracker.addKey(GLFW_KEY_S);
     window.keyTracker.addKey(GLFW_KEY_A);
     window.keyTracker.addKey(GLFW_KEY_D);
     window.keyTracker.addKey(GLFW_KEY_Q);
     window.keyTracker.addKey(GLFW_KEY_E);
+    window.keyTracker.addKey(GLFW_KEY_R);
+    window.keyTracker.addKey(GLFW_KEY_UP);
+    window.keyTracker.addKey(GLFW_KEY_DOWN);
     window.mainLoop();
     return 0;
 }

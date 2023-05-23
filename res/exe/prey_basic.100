@@ -1,6 +1,6 @@
 echo starting prey_basic
 set sdur 0.01
-load pred_basic.100
+load lame_pred_basic.100
 
 exe prey_basic
 

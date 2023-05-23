@@ -12,7 +12,10 @@ echo starting predator stage 5
 stage 5 30 20s
 
 echo starting predator stage 6
-stage 6 30 20s
+# set susc 0.5
+# stage 6 50 30s
+# set susc 0.1
+stage 6 50 30s
 
 echo starting clean up
 set susc 0.01

@@ -1,3 +1,4 @@
-# set sdur 0.1
+load prey_basic.10
+set sdur 0.1
 set susc 0.1
-run 0 30 30s 1 2 0 0
+run 0 30 30s 2 2 0 0

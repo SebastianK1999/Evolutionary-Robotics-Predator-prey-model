@@ -207,6 +207,30 @@ void erppm::env::showWalls()
     }
 }
 
+
+void erppm::env::useScenario_random()
+{
+    unsigned int scenario = Jimmy::Misc::rand().randInt(0, 4);
+    switch (scenario)
+    {
+    case 0:
+        useScenario_0();
+        break;
+    case 1:
+        useScenario_1();
+        break;
+    case 2:
+        useScenario_2();
+        break;
+    case 3:
+        useScenario_3();
+        break;
+    
+    default:
+        break;
+    }
+}
+
 void erppm::env::initRobots(
     const erppm::EObjectType robotType,
     const glm::vec4 &color)
@@ -302,7 +326,7 @@ void erppm::env::useScenario_demo()
     currentWallSet = &(allWallSets[key]);
     for(int i = 0; i < 5; i++)
     {
-        placeWall(10 + 2*i, 2*i);
+        placeWall(10 + 2*i, 2*i, 2);
     }
 }
 
@@ -324,12 +348,91 @@ void erppm::env::useScenario_empty()
 
 void erppm::env::useScenario_0()
 {
-    // TODO
+    std::string key = "scenario_0";
+    setupField(20.0f, 20.0f);
+    hideWalls();
+    auto wallSetIterator = allWallSets.find(key);
+    if (wallSetIterator != allWallSets.end())
+    {
+        currentWallSet = &(wallSetIterator->second);
+        showWalls();
+        return;
+    }
+    allWallSets.emplace(key, std::vector<erppm::Wall>());
+    currentWallSet = &(allWallSets[key]);
+    currentWallSet->reserve(4);
+    placeWall(-7,-7, 2);
+    placeWall(-7, 7, 2);
+    placeWall( 7,-7, 2);
+    placeWall( 7, 7, 2);
+
 }
 
 void erppm::env::useScenario_1()
 {
-    // TODO
+    std::string key = "scenario_1";
+    setupField(20.0f, 20.0f);
+    hideWalls();
+    auto wallSetIterator = allWallSets.find(key);
+    if (wallSetIterator != allWallSets.end())
+    {
+        currentWallSet = &(wallSetIterator->second);
+        showWalls();
+        return;
+    }
+    allWallSets.emplace(key, std::vector<erppm::Wall>());
+    currentWallSet = &(allWallSets[key]);
+    currentWallSet->reserve(4);
+    placeWall(-10, 0, 2);
+    placeWall( 10, 0, 2);
+    placeWall( 0,-10, 2);
+    placeWall( 0, 10, 2);
+}
+
+void erppm::env::useScenario_2()
+{
+    std::string key = "scenario_2";
+    setupField(20.0f, 20.0f);
+    hideWalls();
+    auto wallSetIterator = allWallSets.find(key);
+    if (wallSetIterator != allWallSets.end())
+    {
+        currentWallSet = &(wallSetIterator->second);
+        showWalls();
+        return;
+    }
+    allWallSets.emplace(key, std::vector<erppm::Wall>());
+    currentWallSet = &(allWallSets[key]);
+    currentWallSet->reserve(3);
+    placeWall(  0, 0, 2);
+    placeWall(-10, 0, 2);
+    placeWall( 10, 0, 2);
+}
+
+void erppm::env::useScenario_3()
+{
+    std::string key = "scenario_3";
+    setupField(20.0f, 20.0f);
+    hideWalls();
+    auto wallSetIterator = allWallSets.find(key);
+    if (wallSetIterator != allWallSets.end())
+    {
+        currentWallSet = &(wallSetIterator->second);
+        showWalls();
+        return;
+    }
+    allWallSets.emplace(key, std::vector<erppm::Wall>());
+    currentWallSet = &(allWallSets[key]);
+    currentWallSet->reserve(5);
+    placeWall(  0,  0, 4);
+    placeWall(-18,-18, 2);
+    placeWall(-18, 18, 2);
+    placeWall( 18,-18, 2);
+    placeWall( 18, 18, 2);
+    // placeWall( -4,  0);
+    // placeWall(  4,  0);
+    // placeWall(  0, -4);
+    // placeWall(  0,  4);
 }
 
 void erppm::env::setupRobot_demo()
@@ -367,12 +470,12 @@ void erppm::env::setupRobot_roles()
     setRobotsRandomConcentricSame(robots.getBase(erppm::EObjectTypePrey));
 }
 
-void erppm::env::placeWall(const float x, const float y)
+void erppm::env::placeWall(const float x, const float y, const float size)
 {
         currentWallSet->emplace_back(std::move(erppm::Wall()));
         currentWallSet->back().getPosition().x = x;
         currentWallSet->back().getPosition().y = y;
-        currentWallSet->back().getScale() *= 2;
+        currentWallSet->back().getScale() *= size;
         currentWallSet->back().getColor() = {0.4, 0.3, 0.7, 1.0};
 }
 
