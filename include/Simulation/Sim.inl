@@ -508,13 +508,17 @@ void erppm::sim::loop(unsigned int sensorsCount)
                     }
                 }
             }
-            else if(PREDATOR_LEARNING_MODE == 3)
+            else if constexpr (PREDATOR_LEARNING_MODE == 3)
             {
-                // TODO automatic
-                // NOTE this evolve
-                preyRobots[5]->evolveFrom(*(preyRobots[0]),*(preyRobots[1]));
-                preyRobots[4]->evolveFrom(*(preyRobots[0]),*(preyRobots[2]));
-                preyRobots[3]->evolveFrom(*(preyRobots[1]),*(preyRobots[2]));
+                unsigned int eliminated_index = erppm::cfg::numberOfSurvivingRobots;
+                for(int i = 0; i < erppm::cfg::numberOfSurvivingRobots; i++)
+                {
+                    for(int j = i+1; j < erppm::cfg::numberOfSurvivingRobots; j++)
+                    {
+                        predatorRobots[eliminated_index]->evolveFrom(*(predatorRobots[i]),*(predatorRobots[j]));
+                        eliminated_index++;
+                    }
+                }
             }
 
             if constexpr (PREY_LEARNING_MODE >= 2)
@@ -544,9 +548,15 @@ void erppm::sim::loop(unsigned int sensorsCount)
             }
             else if(PREY_LEARNING_MODE == 3)
             {
-                preyRobots[5]->evolveFrom(*(preyRobots[0]),*(preyRobots[1]));
-                preyRobots[4]->evolveFrom(*(preyRobots[0]),*(preyRobots[2]));
-                preyRobots[3]->evolveFrom(*(preyRobots[1]),*(preyRobots[2]));
+                unsigned int eliminated_index = erppm::cfg::numberOfSurvivingRobots;
+                for(int i = 0; i < erppm::cfg::numberOfSurvivingRobots; i++)
+                {
+                    for(int j = i+1; j < erppm::cfg::numberOfSurvivingRobots; j++)
+                    {
+                        preyRobots[eliminated_index]->evolveFrom(*(preyRobots[i]),*(preyRobots[j]));
+                        eliminated_index++;
+                    }
+                }
             }
         }
     }
@@ -572,12 +582,14 @@ void erppm::sim::loopTemplateSwitching
         if     (PREDATOR_LEARNING_MODE == 0) {SELECT_PREY_LM(__VA_ARGS__, 0)} \
         else if(PREDATOR_LEARNING_MODE == 1) {SELECT_PREY_LM(__VA_ARGS__, 1)} \
         else if(PREDATOR_LEARNING_MODE == 2) {SELECT_PREY_LM(__VA_ARGS__, 2)} \
+        else if(PREDATOR_LEARNING_MODE == 3) {SELECT_PREY_LM(__VA_ARGS__, 3)} \
         else { throw; }
 
     #define SELECT_PREY_LM(...) \
         if     (PREY_LEARNING_MODE == 0) {SELECT_PLACE_LASER(__VA_ARGS__, 0)} \
         else if(PREY_LEARNING_MODE == 1) {SELECT_PLACE_LASER(__VA_ARGS__, 1)} \
         else if(PREY_LEARNING_MODE == 2) {SELECT_PLACE_LASER(__VA_ARGS__, 2)} \
+        else if(PREY_LEARNING_MODE == 3) {SELECT_PLACE_LASER(__VA_ARGS__, 3)} \
         else { throw; }
 
     #define SELECT_PLACE_LASER(...) \

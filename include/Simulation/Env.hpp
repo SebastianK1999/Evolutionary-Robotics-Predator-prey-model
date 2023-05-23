@@ -43,6 +43,7 @@ namespace erppm
         void useScenario_1();
         void useScenario_2();
         void useScenario_3();
+        void useScenario_4();
         void setupRobot_demo();
         void setupRobot_roles();
     

@@ -169,6 +169,7 @@ void erppm::RobotBase::clearVelocity(){
 
 void erppm::RobotBase::evolveFrom(const RobotBase& maleRobot, const RobotBase& femaleRobot){
     network.evolveFrom(maleRobot.network, femaleRobot.network);
+    const double susc = 0.0001;
     {
         for
         (
@@ -184,14 +185,14 @@ void erppm::RobotBase::evolveFrom(const RobotBase& maleRobot, const RobotBase& f
             femaleSensorIter = std::next(femaleSensorIter) 
         )
         {
-            (*sensorIter).evolutionaryData[0] = (Jimmy::Misc::rand().binary() ? (*maleSensorIter).evolutionaryData[0] : (*femaleSensorIter).evolutionaryData[0]) + Jimmy::Misc::rand().decimal(-0.001,0.001);
+            (*sensorIter).evolutionaryData[0] = (Jimmy::Misc::rand().binary() ? (*maleSensorIter).evolutionaryData[0] : (*femaleSensorIter).evolutionaryData[0]) + Jimmy::Misc::rand().decimal(-susc,susc);
             if((*sensorIter).evolutionaryData[0] > glm::pi<float>()){
                 (*sensorIter).evolutionaryData[0] = -glm::two_pi<float>() + (*sensorIter).evolutionaryData[0];
             }   
             else if((*sensorIter).evolutionaryData[0] < -glm::pi<float>()){
                 (*sensorIter).evolutionaryData[0] = glm::two_pi<float>() + (*sensorIter).evolutionaryData[0];
             }
-            (*sensorIter).evolutionaryData[1] = (Jimmy::Misc::rand().binary() ? (*maleSensorIter).evolutionaryData[1] : (*femaleSensorIter).evolutionaryData[1]) + Jimmy::Misc::rand().decimal(-0.001,0.001);
+            (*sensorIter).evolutionaryData[1] = (Jimmy::Misc::rand().binary() ? (*maleSensorIter).evolutionaryData[1] : (*femaleSensorIter).evolutionaryData[1]) + Jimmy::Misc::rand().decimal(-susc,susc);
             if((*sensorIter).evolutionaryData[1] > glm::half_pi<float>()){
                 (*sensorIter).evolutionaryData[1] = glm::half_pi<float>();
             }   

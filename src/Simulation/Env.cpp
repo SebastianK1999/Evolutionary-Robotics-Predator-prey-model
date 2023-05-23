@@ -210,7 +210,7 @@ void erppm::env::showWalls()
 
 void erppm::env::useScenario_random()
 {
-    unsigned int scenario = Jimmy::Misc::rand().randInt(0, 4);
+    unsigned int scenario = Jimmy::Misc::rand().randInt(0, 5);
     switch (scenario)
     {
     case 0:
@@ -224,6 +224,9 @@ void erppm::env::useScenario_random()
         break;
     case 3:
         useScenario_3();
+        break;
+    case 4:
+        useScenario_4();
         break;
     
     default:
@@ -433,6 +436,31 @@ void erppm::env::useScenario_3()
     // placeWall(  4,  0);
     // placeWall(  0, -4);
     // placeWall(  0,  4);
+}
+
+void erppm::env::useScenario_4()
+{
+    std::string key = "scenario_4";
+    setupField(20.0f, 20.0f);
+    hideWalls();
+    auto wallSetIterator = allWallSets.find(key);
+    if (wallSetIterator != allWallSets.end())
+    {
+        currentWallSet = &(wallSetIterator->second);
+        showWalls();
+        return;
+    }
+    allWallSets.emplace(key, std::vector<erppm::Wall>());
+    currentWallSet = &(allWallSets[key]);
+    currentWallSet->reserve(8);
+    placeWall( 18,  0, 2);
+    placeWall( 16,  0, 2);
+    placeWall(-18,  0, 2);
+    placeWall(-16,  0, 2);
+    placeWall(  0, 18, 2);
+    placeWall(  0, 16, 2);
+    placeWall(  0,-18, 2);
+    placeWall(  0,-16, 2);
 }
 
 void erppm::env::setupRobot_demo()
