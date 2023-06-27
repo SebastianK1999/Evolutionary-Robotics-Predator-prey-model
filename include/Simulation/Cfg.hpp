@@ -8,9 +8,9 @@ namespace erppm
 {
     namespace cfg
     {
-        constexpr size_t numberOfHiddenNeurons = 20;
-        constexpr size_t numberOfMemoryNeurons = 20;
-        constexpr size_t numberOfSurvivingRobots = 20;
+        constexpr size_t numberOfHiddenNeurons = 24;
+        constexpr size_t numberOfMemoryNeurons = 8;
+        constexpr size_t numberOfSurvivingRobots =20;
         constexpr size_t numberOfSensorsPerSide = 4;
 
         constexpr size_t numberOfEliminatedRobots = (numberOfSurvivingRobots)*(numberOfSurvivingRobots-1)/2;

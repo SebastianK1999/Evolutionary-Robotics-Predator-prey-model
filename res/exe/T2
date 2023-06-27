@@ -1,0 +1,17 @@
+# Configure
+exe T_CFG
+
+# Tournament
+# # Rywalizacja na pustej przestrzeni
+echo starting prey stage 7
+set rnam T2_s7.20
+stage 7 200 30s
+save T2_s7 yes
+stage_record 7 30s
+
+# # Rywalizacja na zmiennych przestrzeniach
+echo starting prey stage 8
+set rnam T2_s8.20
+stage 8 100 100s
+save T2_s8 yes
+stage_record 8 100s

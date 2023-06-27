@@ -45,7 +45,6 @@ void erppm::RobotBase::collide(const std::vector<RobotBase*>& robots, const std:
     }
     // Walls
     for(std::vector<Wall>::const_iterator wallIter = walls.begin(); wallIter != walls.end(); wallIter = std::next(wallIter)){
-    
         glm::vec3 relativeCenter = (*wallIter).getPosition() - this->getPosition();
         //* With commented out code, scale x y has to be as close as possible 
         // if(abs(relativeCenter.x)*(*wallIter).scale.y < abs(relativeCenter.y)*(*wallIter).scale.x){

@@ -1,0 +1,23 @@
+# Configure
+exe T_CFG
+
+echo starting "blind rotation"
+set rnam T_blind_pred_0
+set susc 0.1
+stage 0 30 3
+
+set rnam T_blind_pred_1
+stage 0 30 6
+
+set rnam T_blind_pred_2
+stage 0 30 1s
+
+set rnam T_blind_pred_3
+stage 0 30 10s
+
+echo clean-up "blind rotation"
+set rnam T_blind_pred_4
+set susc 0.01
+stage 0 30 10s
+
+echo done "blind rotation"

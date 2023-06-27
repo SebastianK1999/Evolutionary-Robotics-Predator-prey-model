@@ -1,0 +1,6 @@
+# # Rywalizacja na zmiennych przestrzeniach
+echo starting prey stage 8
+set rnam T4_clean.20
+stage 8 100 100s
+save T4_clean yes
+stage_record 8 100s

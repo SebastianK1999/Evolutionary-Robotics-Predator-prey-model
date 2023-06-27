@@ -316,6 +316,7 @@ erppm::env& erppm::env::get()
 void erppm::env::useScenario_demo()
 {
     const std::string key = "demo";
+    currentWallSetName = key;
     setupField(30.0f, 30.0f);
     hideWalls();
     auto wallSetIterator = allWallSets.find(key);
@@ -336,6 +337,7 @@ void erppm::env::useScenario_demo()
 void erppm::env::useScenario_empty()
 {
     std::string key = "empty";
+    currentWallSetName = key;
     setupField(30.0f, 30.0f);
     hideWalls();
     auto wallSetIterator = allWallSets.find(key);
@@ -352,6 +354,7 @@ void erppm::env::useScenario_empty()
 void erppm::env::useScenario_0()
 {
     std::string key = "scenario_0";
+    currentWallSetName = key;
     setupField(20.0f, 20.0f);
     hideWalls();
     auto wallSetIterator = allWallSets.find(key);
@@ -364,16 +367,17 @@ void erppm::env::useScenario_0()
     allWallSets.emplace(key, std::vector<erppm::Wall>());
     currentWallSet = &(allWallSets[key]);
     currentWallSet->reserve(4);
-    placeWall(-7,-7, 2);
-    placeWall(-7, 7, 2);
-    placeWall( 7,-7, 2);
-    placeWall( 7, 7, 2);
+    placeWall(-8,-8, 2);
+    placeWall(-8, 8, 2);
+    placeWall( 8,-8, 2);
+    placeWall( 8, 8, 2);
 
 }
 
 void erppm::env::useScenario_1()
 {
     std::string key = "scenario_1";
+    currentWallSetName = key;
     setupField(20.0f, 20.0f);
     hideWalls();
     auto wallSetIterator = allWallSets.find(key);
@@ -386,15 +390,16 @@ void erppm::env::useScenario_1()
     allWallSets.emplace(key, std::vector<erppm::Wall>());
     currentWallSet = &(allWallSets[key]);
     currentWallSet->reserve(4);
-    placeWall(-10, 0, 2);
-    placeWall( 10, 0, 2);
-    placeWall( 0,-10, 2);
-    placeWall( 0, 10, 2);
+    placeWall(-10,  0, 2);
+    placeWall( 10,  0, 2);
+    placeWall(  0,-10, 2);
+    placeWall(  0, 10, 2);
 }
 
 void erppm::env::useScenario_2()
 {
     std::string key = "scenario_2";
+    currentWallSetName = key;
     setupField(20.0f, 20.0f);
     hideWalls();
     auto wallSetIterator = allWallSets.find(key);
@@ -415,6 +420,7 @@ void erppm::env::useScenario_2()
 void erppm::env::useScenario_3()
 {
     std::string key = "scenario_3";
+    currentWallSetName = key;
     setupField(20.0f, 20.0f);
     hideWalls();
     auto wallSetIterator = allWallSets.find(key);
@@ -441,6 +447,7 @@ void erppm::env::useScenario_3()
 void erppm::env::useScenario_4()
 {
     std::string key = "scenario_4";
+    currentWallSetName = key;
     setupField(20.0f, 20.0f);
     hideWalls();
     auto wallSetIterator = allWallSets.find(key);

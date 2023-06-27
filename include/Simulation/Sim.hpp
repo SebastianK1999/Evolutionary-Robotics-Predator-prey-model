@@ -4,6 +4,7 @@
 #include <vector>
 #include <thread>
 #include <future>
+#include <string>
 
 #include "Robotics/RobotBase.hpp"
 #include "Simulation/Cfg.hpp"
@@ -32,10 +33,13 @@ namespace erppm
     {
     public:
         static sim& get();
+        std::string runName;
+        std::string runStartTime;
         double stepDuration;
         unsigned int numberOfGenerations;
         unsigned int numberOfStepsPerGeneration;
         unsigned int numberOfRepetitions;
+        bool recordRun;
         bool randomEnv;
         bool survival;
         

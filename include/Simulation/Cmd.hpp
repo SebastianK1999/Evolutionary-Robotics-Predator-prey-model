@@ -23,6 +23,9 @@ namespace erppm
         static void exe_cmd(const erppm::Command& command);
         static void view_cmd(const erppm::Command& command);
         static void stage_cmd(const erppm::Command& command);
+        static void stageRecord_cmd(const erppm::Command& command);
+        static void clearEvolutionRecords_cmd(const erppm::Command& command);
+        static void dumpEvolutionRecords_cmd(const erppm::Command& command);
         static void saveModel_cmd(const erppm::Command& command);
         static void loadModel_cmd(const erppm::Command& command);
         static void resetModel_cmd(const erppm::Command& command);

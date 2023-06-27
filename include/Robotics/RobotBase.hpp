@@ -29,6 +29,11 @@ namespace erppm
         double angularVelocity;
         EObjectType type;
         std::vector<SensorBase*> sensors;
+
+        float scoreTime; 
+        float scoreRotation; 
+        float scoreDistance; 
+
         RobotBase(const std::filesystem::path& modePlath);
         virtual ~RobotBase();
         virtual void run(double time, const std::vector<double>& controlInput) = 0;

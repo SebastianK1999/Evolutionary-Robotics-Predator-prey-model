@@ -18,6 +18,7 @@
 #include "Simulation/Cmd.hpp"
 #include "Simulation/Cfg.hpp"
 #include "Simulation/Win.hpp"
+#include "Simulation/Plt.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -29,6 +30,7 @@ int main(int argc, char *argv[])
         oglu::Window wInitGlew(800, 800, "Init GLEW");
         erppm::env::get().useScenario_demo();
         erppm::env::get().setupRobot_roles();
+        erppm::plt::get().runData.clear();
     }
     if(argc == 2)
     {

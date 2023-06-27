@@ -1,12 +1,14 @@
 #include <sstream>
 #include <iterator>
 #include <filesystem>
+#include <iomanip>
 
 #include "oglUtil/drawableSystem/DrawableRegistry.hpp"
 
 #include "Simulation/Win.hpp"
 #include "Simulation/Env.hpp"
 #include "Simulation/Sim.hpp"
+#include "Simulation/Plt.hpp"
 
 #include "Simulation/Cmd.hpp"
 
@@ -63,6 +65,18 @@ void erppm::cmd::executeCommand(const erppm::Command& command)
     else if (command[0] == "view" || command[0] == "v")
     {
         view_cmd(command);
+    }
+    else if (command[0] == "stage_record" || command[0] == "sr")
+    {
+        stageRecord_cmd(command);
+    }
+    else if (command[0] == "ev_clear" || command[0] == "ecl")
+    {
+        clearEvolutionRecords_cmd(command);
+    }
+    else if (command[0] == "ev_dump" || command[0] == "ed")
+    {
+        dumpEvolutionRecords_cmd(command);
     }
     else if (command[0] == "save")
     {
@@ -218,7 +232,31 @@ void erppm::cmd::stage_cmd(const erppm::Command& command)
     {
         run_cmd({"run", "0", command[2], command[3], "2", "2", "0", "0", "1"});
     }
+}
 
+void erppm::cmd::stageRecord_cmd(const erppm::Command& command)
+{
+    if (command.size() != 3){
+        wrongParms_cmd(command);
+        return;
+    }
+    erppm::sim::get().recordRun = true;
+    erppm::sim::get().runStartTime = Jimmy::Misc::GetDateTime();
+    erppm::plt::get().runData.clear();
+    stage_cmd({"stage", command[1], "1", command[2]});
+    erppm::sim::get().recordRun = false;
+}
+
+void erppm::cmd::clearEvolutionRecords_cmd(const erppm::Command& command)
+{
+    std::cout << "Evolution records cleared! \n";
+    erppm::plt::get().evolutionData.clear();
+}
+
+void erppm::cmd::dumpEvolutionRecords_cmd(const erppm::Command& command)
+{
+    std::cout << "Evolution records dumped! \n";
+    erppm::plt::get().dumpEvolutionToFile(erppm::sim::get().runName);
 }
 
 void erppm::cmd::view_cmd(const erppm::Command& command)
@@ -378,6 +416,11 @@ void erppm::cmd::setVar_cmd(const erppm::Command& command)
         erppm::sim::get().stepDuration = atof(command[2].c_str());
         std::cout << "sdur=" << erppm::sim::get().stepDuration <<  "\n";
     }
+    else if (command[1] == "rnam")
+    {
+        erppm::sim::get().runName = command[2];
+        std::cout << "rnam=" << erppm::sim::get().runName <<  "\n";
+    }
     else
     {
         std::cout << "Variable \"" << command[1] <<  "\" not found.\n";
@@ -389,9 +432,13 @@ void erppm::cmd::help_cmd(const erppm::Command& command)
 {
     std::cout <<
         "Available commands:\n" << 
-        "\t" << "run [scenario] - Opens window with simulation\n" <<
-        "\t" << "stage [n] - Trains neural network in the background\n" <<
-        // "\t" << "train [stage] - Trains neural network in the background\n" <<
+        "\t" << "stage [stage] [generations] [steps] - Train using stege\n" <<
+        "\t" << "view [stage] [steps] - View current model\n" <<
+        "\t" << "exe [file] - Execute script\n" <<
+        "\t" << "load [file] - Load model\n" <<
+        "\t" << "save [file] - Save model\n" <<
+        "\t" << "set [param] [value] - params:[susc, sdur, rnam]\n" <<
+        "\t" << "run [???] - Complex command for developers\n" <<
         "\t" << "exit/quit/ - Terminates program\n" <<
     "";
 }

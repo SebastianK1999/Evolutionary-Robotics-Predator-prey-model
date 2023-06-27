@@ -83,6 +83,13 @@ MainWindow::MainWindow(const int _width, const int _height, const std::string& _
     mainCamera.radius = 13;
     mainCamera.minVerticalRotation = 0.0;
     mainCamera.maxVerticalRotation = glm::half_pi<float>();
+
+    // mainCamera.position.z = 70;
+    // mainCamera.position.x = 0;
+    // mainCamera.radius = 13;
+    // mainCamera.setRotation({glm::half_pi<float>(), glm::half_pi<float>(), glm::half_pi<float>()});
+    // mainCamera.minVerticalRotation = -glm::half_pi<float>();
+    // mainCamera.maxVerticalRotation = glm::half_pi<float>();
 }
 
 MainWindow::~MainWindow()

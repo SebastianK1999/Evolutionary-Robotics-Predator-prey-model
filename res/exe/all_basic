@@ -1,0 +1,85 @@
+# Config run
+# set rnam ex_1_1
+set susc 0.1
+
+# Predator
+# # Nauka obracania się w stronę znikającej ofiary 
+echo starting predator stage 0
+set rnam all_basic_s01.20
+stage 0 30 3
+set rnam all_basic_s02.20
+stage 0 30 6
+stage 0 30 1s
+stage 0 30 10s
+save temp_s0 yes
+stage_record 0 10s
+
+# # Poluj na umieszoną na sensorze ofiarę
+echo starting predator stage 1
+set rnam all_basic_s1.20
+stage 1 30 10s
+save temp_s1 yes
+stage_record 1 10s
+
+# # Znajdź ofiarę i pouj na nią
+echo starting predator stage 2
+set rnam all_basic_s2.20
+stage 2 30 10s
+save temp_s2 yes
+stage_record 2 10s
+
+# Prey
+# # Nauka odwracania od znikającego łowcy
+echo starting prey stage 3
+set rnam all_basic_s31.20
+stage 3 30 3
+set rnam all_basic_s32.20
+stage 3 30 6
+stage 3 30 1s
+stage 3 30 10s
+save temp_s3 yes
+stage_record 3 10s
+
+# # Uciekaj od umieszczonego na sensorze łowcy
+echo starting prey stage 4
+set rnam all_basic_s4.20
+stage 4 30 10s
+save temp_s4 yes
+stage_record 4 10s
+
+# # Znajdź i uciekaj od łowcy
+echo starting prey stage 5
+set rnam all_basic_s5.20
+stage 5 30 20s
+save temp_s5 yes
+stage_record 5 20s
+
+# # Znajdź i uciekaj od polującego łowcy
+echo starting prey stage 6
+set rnam all_basic_s6.20
+stage 6 50 30s
+save temp_s6 yes
+stage_record 6 30s
+
+
+# Tournament
+# # Rywalizacja na pustej przestrzeni
+echo starting prey stage 7
+set rnam all_basic_s7.20
+stage 7 50 30s
+save temp_s7 yes
+stage_record 7 30s
+
+# # Rywalizacja na zmiennych przestrzeniach
+echo starting prey stage 8
+set rnam all_basic_s8.20
+stage 8 100 100s
+save temp_s8 yes
+stage_record 8 100s
+
+# # # Ewolucja sensorów
+echo starting prey stage sensor
+set rnam all_basic_sensor.20
+run 0 150 100s 3 3 0 0 1
+stage_record 8 100s
+# TODO

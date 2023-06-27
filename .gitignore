@@ -52,6 +52,9 @@ ubuild/
 *.code-workspace
 *.cxxc
 
+plots/plots/*
+__pycache__
+
 # all hidden files !except 
 .*
 !/.gitignore

@@ -1,0 +1,34 @@
+# Configure
+exe T_CFG
+
+
+# # Znajdź ofiarę i pouj na nią
+echo starting predator stage 2
+set rnam T3_s2.20
+stage 2 100 10s
+save T3_s2 yes
+stage_record 2 10s
+
+
+# # Znajdź i uciekaj od polującego łowcy
+echo starting prey stage 6
+set rnam T3_s6.20
+stage 6 100 30s
+save T3_s6 yes
+stage_record 6 30s
+
+
+# Tournament
+# # Rywalizacja na pustej przestrzeni
+echo starting prey stage 7
+set rnam T3_s7.20
+stage 7 100 30s
+save T3_s7 yes
+stage_record 7 30s
+
+# # Rywalizacja na zmiennych przestrzeniach
+echo starting prey stage 8
+set rnam T3_s8.20
+stage 8 100 100s
+save T3_s8 yes
+stage_record 8 100s

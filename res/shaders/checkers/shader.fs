@@ -17,10 +17,10 @@ void main()
     vec4 cLight = fColor * (shading * 0.3 + 0.7);
     Color = texture( myTextureSampler, fUV);
     if(fPosition[0] * fPosition[1] < 0){
-        Color = (mod(int(fPosition[0]) + int(fPosition[1]),2) == 0.0 ? cDark : cLight);
+        Color = (mod(int(fPosition[0])/2 + int(fPosition[1])/2,2) == 0.0 ? cDark : cLight);
     }
     else{
-        Color = (mod(int(fPosition[0]) + int(fPosition[1]),2) == 0.0 ? cLight : cDark);
+        Color = (mod(int(fPosition[0])/2 + int(fPosition[1])/2,2) == 0.0 ? cLight : cDark);
     }
     Color = Color;
     Color.a = fColor.a;

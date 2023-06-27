@@ -1,0 +1,9 @@
+# Configure
+exe T_CFG
+
+# # Rywalizacja na zmiennych przestrzeniach
+echo starting prey stage 8
+set rnam T1_s8.20
+stage 8 400 100s
+save T1_s8 yes
+stage_record 8 100s

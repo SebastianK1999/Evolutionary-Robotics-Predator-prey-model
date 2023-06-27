@@ -26,6 +26,7 @@ namespace erppm
         std::vector<erppm::Wall>* currentWallSet;
         std::unordered_map<std::string, std::vector<erppm::Wall>> allWallSets;
         erppm::RobotContainer robots;
+        std::string currentWallSetName;
         void setRobotsCenter(const std::vector<erppm::RobotBase*>& robots);
         void setRobotsCenterSame(const std::vector<erppm::RobotBase*>& robots);
         void setRobotsRandom(const std::vector<erppm::RobotBase*>& robots);
